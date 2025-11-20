@@ -21,7 +21,7 @@ function startSearch() {
     query = searchInput.value;
     
     if (query.trim() === '') {
-        statusElement.textContent = 'Please enter a search term.';
+        statusElement.textContent = 'please enter a search term.';
         return;
     }
 
@@ -44,10 +44,10 @@ function stopSearch() {
     searchInput.disabled = false;
     stopButton.disabled = true;
 
-    if (totalMatches === 0) {
-        statusElement.textContent = 'Search stopped. No matches found.';
-    } else {
-        statusElement.textContent = `Search stopped. Found ${totalMatches} total match(es).`;
+    if (totalMatches === 0 && resultsContainer.innerHTML === '') {
+        statusElement.textContent = 'no matches found.';
+    } else if (totalMatches > 0) {
+        statusElement.textContent = `search stopped. Found ${totalMatches} total match(es).`;
     }
 }
 
@@ -68,8 +68,15 @@ async function searchLoop(pageToken, pageNum) {
         const response = await fetch(url);
         const data = await response.json();
 
-        if (data.error) {
-            statusElement.textContent = `API Error: ${data.error.message}`;
+        if (!response.ok) {
+            const errorMessage = data.error?.message || data.error || 'an unknown server error occurred.';
+
+            if (response.status === 429) {
+                statusElement.textContent = `rrror: youtube API quota exceeded. please try again tomorrow.`;
+            } else {
+                statusElement.textContent = `server Error (${response.status}): ${errorMessage}`;
+            }
+            
             stopSearch();
             return;
         }
@@ -96,7 +103,7 @@ async function searchLoop(pageToken, pageNum) {
         }
 
     } catch (error) {
-        statusElement.textContent = `Network Error: ${error.message}`;
+        statusElement.textContent = `network error: ${error.message}`;
         stopSearch();
     }
 }
