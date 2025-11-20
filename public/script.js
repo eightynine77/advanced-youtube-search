@@ -69,12 +69,12 @@ async function searchLoop(pageToken, pageNum) {
         const data = await response.json();
 
         if (!response.ok) {
-            const errorMessage = data.error?.message || data.error || 'An unknown server error occurred.';
+            const errorMessage = data.error?.message || data.error || 'an unknown server error occurred.';
 
             if (response.status === 429) {
-                statusElement.textContent = `Error: API quota exceeded. Please try again tomorrow.`;
+                statusElement.textContent = `error: youtube API quota exceeded. please try again tomorrow.`;
             } else {
-                statusElement.textContent = `Server Error (${response.status}): ${errorMessage}`;
+                statusElement.textContent = `server error (${response.status}): ${errorMessage}`;
             }
             
             stopSearch();
