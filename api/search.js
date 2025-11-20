@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    const API_KEY = process.env.YOUTUBE_API_KEY;
+    const API_KEY = process.env.youtube_api_key;
     const { q, pageToken } = req.query;
 
     if (!q) {
