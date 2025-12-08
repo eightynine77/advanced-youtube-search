@@ -38,3 +38,31 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #ff0000;
 }
+
+@media (max-width: 576px) {
+    .input-group {
+        flex-wrap: wrap;
+    }
+
+    #search-input {
+        flex: 0 0 100%;           
+        width: 100%;
+        margin-bottom: 10px;       
+        border-radius: 0.375rem !important; 
+        z-index: 0;
+    }
+
+    #search-button, 
+    #stop-button {
+        flex: 1;                    
+        border-radius: 0.375rem !important; 
+        margin-left: 0 !important; 
+    }
+
+    #search-button {
+        margin-right: 5px;
+    }
+    #stop-button {
+        margin-left: 5px !important;
+    }
+}
