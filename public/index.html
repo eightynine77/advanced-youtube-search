@@ -4,18 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>advanced youtube search - lumigest</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <h1>advanced youtube search - lumigest</h1>
-    <p>search youtube with high accuracy</p>
-    <div class="search-container">
-        <input type="text" id="search-input" placeholder="Enter exact video title...">
-        <button id="search-button">Search</button>
-        <button id="stop-button" disabled>Stop Search</button>
-    </div>
-    <div id="search-status"></div>
-    <div id="results-container">
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold text-danger">advanced youtube search - lumigest</h1>
+            <p class="lead text-muted">search youtube with high accuracy</p>
+        </div>
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-8 col-lg-6">
+                <div class="input-group input-group-lg shadow-sm">
+                    <input type="text" id="search-input" class="form-control" placeholder="Enter exact video title..." aria-label="Search term">
+                    <button id="search-button" class="btn btn-danger" type="button">Search</button>
+                    <button id="stop-button" class="btn btn-secondary" type="button" disabled>Stop</button>
+                </div>
+            </div>
+        </div>
+        <div id="search-status" class="text-center mb-4 fw-bold text-secondary"></div>
+        <div id="results-container" class="row g-4">
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

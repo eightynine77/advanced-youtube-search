@@ -45,21 +45,18 @@ function stopSearch() {
     stopButton.disabled = true;
 
     if (totalMatches === 0) {
-        statusElement.textContent = 'no matches found.';
+        statusElement.textContent = 'Search stopped. No matches found yet.';
     } else {
-        statusElement.textContent = `search stopped. found ${totalMatches} total match(es).`;
+        statusElement.textContent = `Search stopped. Found ${totalMatches} match(es).`;
     }
 }
 
 async function searchLoop(pageToken, pageNum) {
-    if (!isSearching) {
-        return; 
-    }
+    if (!isSearching) return;
 
-    statusElement.textContent = `Searching page ${pageNum}... (Found ${totalMatches} so far)`;
-    
+    statusElement.textContent = `Scanning page ${pageNum}... (Found: ${totalMatches})`;
+
     let url = `/api/search?q=${encodeURIComponent(query)}`;
-    
     if (pageToken) {
         url += `&pageToken=${pageToken}`;
     }
@@ -69,20 +66,21 @@ async function searchLoop(pageToken, pageNum) {
         const data = await response.json();
 
         if (!response.ok) {
-            const errorMessage = data.error?.message || data.error || 'an unknown server error occurred.';
+            throw new Error(data.error || 'Unknown error');
+        }
 
-            if (response.status === 429) {
-                statusElement.textContent = `error: youtube API quota exceeded. please try again tomorrow.`;
-            } else {
-                statusElement.textContent = `server error (${response.status}): ${errorMessage}`;
-            }
-            
-            stopSearch();
+        const videos = data.items;
+        if (!videos || videos.length === 0) {
+            isSearching = false;
+            statusElement.textContent = `Search complete. Found ${totalMatches} match(es).`;
+            searchButton.disabled = false;
+            searchInput.disabled = false;
+            stopButton.disabled = true;
             return;
         }
 
-        const exactMatches = data.items.filter(item => 
-            item.snippet.title.toLowerCase().includes(query.toLowerCase())
+        const exactMatches = videos.filter(video => 
+            video.snippet.title.toLowerCase().includes(query.toLowerCase())
         );
 
         if (exactMatches.length > 0) {
@@ -93,41 +91,48 @@ async function searchLoop(pageToken, pageNum) {
         const nextPageToken = data.nextPageToken;
 
         if (isSearching && nextPageToken) {
-            searchLoop(nextPageToken, pageNum + 1);
+            setTimeout(() => searchLoop(nextPageToken, pageNum + 1), 100);
         } else if (!nextPageToken) {
             isSearching = false;
-            statusElement.textContent = `search complete: reached the end of results. found ${totalMatches} match(es).`;
+            statusElement.textContent = `Search complete: Reached the end of results. Found ${totalMatches} match(es).`;
             searchButton.disabled = false;
             searchInput.disabled = false;
             stopButton.disabled = true;
         }
 
     } catch (error) {
-        statusElement.textContent = `network error: ${error.message}`;
+        statusElement.textContent = `Network error: ${error.message}`;
         stopSearch();
     }
 }
 
 function displayResults(videos) {
     videos.forEach(video => {
-        const videoItem = document.createElement('div');
-        videoItem.className = 'video-item';
-
+        const col = document.createElement('div');
+        col.className = 'col-12 col-sm-6 col-md-4 col-lg-3'; 
+        const card = document.createElement('div');
+        card.className = 'card h-100 shadow-sm border-0'; 
+        const thumbnail = document.createElement('img');
+        thumbnail.src = video.snippet.thumbnails.high.url;
+        thumbnail.alt = video.snippet.title;
+        thumbnail.className = 'card-img-top';
+        thumbnail.style.objectFit = 'cover';
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body d-flex flex-column';
+        const title = document.createElement('h5');
+        title.className = 'card-title fs-6'; 
+        title.textContent = video.snippet.title;
         const videoLink = document.createElement('a');
         videoLink.href = `https://www.youtube.com/watch?v=${video.id.videoId}`;
         videoLink.target = '_blank';
         videoLink.rel = 'noopener noreferrer';
-
-        const thumbnail = document.createElement('img');
-        thumbnail.src = video.snippet.thumbnails.high.url;
-        thumbnail.alt = video.snippet.title;
-
-        const title = document.createElement('h3');
-        title.textContent = video.snippet.title;
-
-        videoLink.appendChild(thumbnail);
-        videoLink.appendChild(title);
-        videoItem.appendChild(videoLink);
-        resultsContainer.appendChild(videoItem);
+        videoLink.className = 'btn btn-outline-danger mt-auto stretched-link'; 
+        videoLink.textContent = 'Watch Video';
+        cardBody.appendChild(title);
+        cardBody.appendChild(videoLink);
+        card.appendChild(thumbnail);
+        card.appendChild(cardBody);
+        col.appendChild(card);
+        resultsContainer.appendChild(col);
     });
 }
