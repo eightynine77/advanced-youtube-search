@@ -18,6 +18,10 @@
             <div class="col-md-8 col-lg-6">
                 <div class="input-group input-group-lg shadow-sm">
                     <input type="text" id="search-input" class="form-control" placeholder="Enter exact video title..." aria-label="Search term" tabindex="1">
+                    <select class="form-select" id="search-filter" style="max-width: 200px;" tabindex="2">
+                        <option value="broad" selected>match whole word</option>
+                        <option value="exact">search exact Title</option>
+                    </select>
                     <button id="search-button" class="btn btn-danger" type="button" tabindex="2">Search</button>
                     <button id="stop-button" class="btn btn-secondary" type="button" tabindex="3">Stop</button>
                 </div>

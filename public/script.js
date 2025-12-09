@@ -7,6 +7,7 @@ const searchButton = document.getElementById('search-button');
 const stopButton = document.getElementById('stop-button');
 const resultsContainer = document.getElementById('results-container');
 const statusElement = document.getElementById('search-status');
+const filterSelect = document.getElementById('search-filter');
 
 searchButton.addEventListener('click', startSearch);
 stopButton.addEventListener('click', stopSearch);
@@ -24,26 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-document.addEventListener("keydown", function (e) {
-  if (e.key === "Tab") {
-    const focusable = [...document.querySelectorAll('[tabindex]:not([tabindex="-1"])')]
-      .sort((a, b) => a.tabIndex - b.tabIndex);
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    }
-
-    else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
-});
-
 function startSearch() {
     query = searchInput.value;
     
@@ -59,6 +40,7 @@ function startSearch() {
     
     searchButton.disabled = true;
     searchInput.disabled = true;
+    filterSelect.disabled = true; 
     stopButton.disabled = false;
 
     searchLoop(null, 1); 
@@ -69,6 +51,7 @@ function stopSearch() {
 
     searchButton.disabled = false;
     searchInput.disabled = false;
+    filterSelect.disabled = false; 
     stopButton.disabled = true;
 
     if (totalMatches === 0) {
@@ -102,13 +85,22 @@ async function searchLoop(pageToken, pageNum) {
             statusElement.textContent = `Search complete. Found ${totalMatches} match(es).`;
             searchButton.disabled = false;
             searchInput.disabled = false;
+            filterSelect.disabled = false;
             stopButton.disabled = true;
             return;
         }
 
-        const exactMatches = videos.filter(video => 
-            video.snippet.title.toLowerCase().includes(query.toLowerCase())
-        );
+        const filterType = filterSelect.value;
+        const normalizedQuery = query.toLowerCase().trim();
+        const exactMatches = videos.filter(video => {
+            const title = video.snippet.title.toLowerCase().trim();
+            
+            if (filterType === 'exact') {
+                return title === normalizedQuery;
+            } else {
+                return title.includes(normalizedQuery);
+            }
+        });
 
         if (exactMatches.length > 0) {
             totalMatches += exactMatches.length;
@@ -124,6 +116,7 @@ async function searchLoop(pageToken, pageNum) {
             statusElement.textContent = `Search complete: Reached the end of results. Found ${totalMatches} match(es).`;
             searchButton.disabled = false;
             searchInput.disabled = false;
+            filterSelect.disabled = false;
             stopButton.disabled = true;
         }
 
