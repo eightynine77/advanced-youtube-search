@@ -14,22 +14,32 @@
             <h1 class="display-5 fw-bold text-danger">advanced youtube search - lumigest</h1>
             <p class="lead text-muted">search youtube with high accuracy</p>
         </div>
-        <div class="row justify-content-center mb-4">
-            <div class="col-md-8 col-lg-6">
-                <div class="input-group input-group-lg shadow-sm">
-                    <input type="text" id="search-input" class="form-control" placeholder="Enter exact video title..." aria-label="Search term" tabindex="1">
-                    <select class="form-select" id="search-filter" style="max-width: 200px;" tabindex="2">
-                        <option value="broad" selected>match whole word</option>
-                        <option value="exact">search exact Title</option>
-                    </select>
-                    <button id="search-button" class="btn btn-danger" type="button" tabindex="2">Search</button>
-                    <button id="stop-button" class="btn btn-secondary" type="button" tabindex="3">Stop</button>
-                </div>
+        <div class="row justify-content-center mb-2">
+        <div class="col-md-8 col-lg-6 d-flex align-items-center">
+            <div class="dropdown me-2">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="searchFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    default (match words)
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="searchFilterDropdown">
+                    <li><a class="dropdown-item active" href="#" data-value="default">default (Match Words)</a></li>
+                    <li><a class="dropdown-item" href="#" data-value="phrase">match whole word</a></li>
+                    <li><a class="dropdown-item" href="#" data-value="exact">exact title</a></li>
+                </ul>
             </div>
+            <small class="text-muted" id="filter-description">Search for videos containing all your keywords.</small>
         </div>
-        <div id="search-status" class="text-center mb-4 fw-bold text-secondary"></div>
-        <div id="results-container" class="row g-4">
+    </div>
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8 col-lg-6">
+            <div class="input-group input-group-lg shadow-sm">
+                <input type="text" id="search-input" class="form-control" placeholder="Enter video title..." aria-label="Search term" tabindex="1">
+                <button id="search-button" class="btn btn-danger" type="button" tabindex="2">Search</button>
+                <button id="stop-button" class="btn btn-secondary" type="button" tabindex="3">Stop</button>
+           </div>
         </div>
+    </div>
+    <div id="search-status" class="text-center mb-4 fw-bold text-secondary"></div>
+    <div id="results-container" class="row g-4"></div>
     </div>
     <script src="script.js"></script>
 </body>

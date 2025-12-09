@@ -1,13 +1,34 @@
 let isSearching = false;
 let totalMatches = 0;
 let query = '';
+let currentFilterMode = 'default'; 
 
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
 const stopButton = document.getElementById('stop-button');
 const resultsContainer = document.getElementById('results-container');
 const statusElement = document.getElementById('search-status');
-const filterSelect = document.getElementById('search-filter');
+const filterDropdownBtn = document.getElementById('searchFilterDropdown');
+const filterItems = document.querySelectorAll('.dropdown-item');
+const filterDescription = document.getElementById('filter-description');
+
+filterItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        filterItems.forEach(i => i.classList.remove('active'));
+        e.target.classList.add('active');
+        filterDropdownBtn.textContent = e.target.textContent;
+        currentFilterMode = e.target.getAttribute('data-value');
+
+        if (currentFilterMode === 'default') {
+            filterDescription.textContent = 'Search for videos containing all your keywords.';
+        } else if (currentFilterMode === 'phrase') {
+            filterDescription.textContent = 'Search for this exact phrase inside a title.';
+        } else {
+            filterDescription.textContent = 'Search for a video with this exact title.';
+        }
+    });
+});
 
 searchButton.addEventListener('click', startSearch);
 stopButton.addEventListener('click', stopSearch);
@@ -40,7 +61,7 @@ function startSearch() {
     
     searchButton.disabled = true;
     searchInput.disabled = true;
-    filterSelect.disabled = true; 
+    filterDropdownBtn.classList.add('disabled'); 
     stopButton.disabled = false;
 
     searchLoop(null, 1); 
@@ -51,7 +72,7 @@ function stopSearch() {
 
     searchButton.disabled = false;
     searchInput.disabled = false;
-    filterSelect.disabled = false; 
+    filterDropdownBtn.classList.remove('disabled'); 
     stopButton.disabled = true;
 
     if (totalMatches === 0) {
@@ -85,20 +106,23 @@ async function searchLoop(pageToken, pageNum) {
             statusElement.textContent = `Search complete. Found ${totalMatches} match(es).`;
             searchButton.disabled = false;
             searchInput.disabled = false;
-            filterSelect.disabled = false;
+            filterDropdownBtn.classList.remove('disabled');
             stopButton.disabled = true;
             return;
         }
 
-        const filterType = filterSelect.value;
         const normalizedQuery = query.toLowerCase().trim();
+
         const exactMatches = videos.filter(video => {
             const title = video.snippet.title.toLowerCase().trim();
             
-            if (filterType === 'exact') {
+            if (currentFilterMode === 'exact') {
                 return title === normalizedQuery;
-            } else {
+            } else if (currentFilterMode === 'phrase') {
                 return title.includes(normalizedQuery);
+            } else {
+                const queryWords = normalizedQuery.split(/\s+/); 
+                return queryWords.every(word => title.includes(word));
             }
         });
 
@@ -116,7 +140,7 @@ async function searchLoop(pageToken, pageNum) {
             statusElement.textContent = `Search complete: Reached the end of results. Found ${totalMatches} match(es).`;
             searchButton.disabled = false;
             searchInput.disabled = false;
-            filterSelect.disabled = false;
+            filterDropdownBtn.classList.remove('disabled');
             stopButton.disabled = true;
         }
 
