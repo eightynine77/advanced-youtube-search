@@ -61,7 +61,7 @@ function startSearch() {
     
     searchButton.disabled = true;
     searchInput.disabled = true;
-    filterDropdownBtn.classList.add('disabled'); 
+    filterDropdownBtn.classList.add('enabled'); 
     stopButton.disabled = false;
 
     searchLoop(null, 1); 
