@@ -136,8 +136,6 @@ async function searchLoop(pageToken, pageNum) {
 function displayResults(videos) {
     resultsContainer.innerHTML = '';
 
-    const row = document.createElement('div');
-    row.className = 'row g-4';
     videos.forEach(video => {
         const col = document.createElement('div');
         col.className = 'col-12 col-sm-6 col-md-4 col-lg-3'; 
