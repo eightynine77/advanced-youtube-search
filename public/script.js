@@ -153,7 +153,7 @@ function displayResults(videos) {
         videoLink.href = `https://www.youtube.com/watch?v=${video.id.videoId}`;
         videoLink.target = '_blank';
         videoLink.rel = 'noopener noreferrer';
-        videoLink.className = 'btn btn-outline-danger mt-auto stretched-link'; 
+        videoLink.className = 'btn btn-outline-danger mt-auto'; 
         videoLink.textContent = 'Watch Video';
         cardBody.appendChild(title);
         cardBody.appendChild(videoLink);
