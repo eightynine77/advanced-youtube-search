@@ -135,11 +135,6 @@ async function searchLoop(pageToken, pageNum) {
 
 function displayResults(videos) {
     resultsContainer.innerHTML = '';
-    
-    if (videos.length === 0) {
-        statusElement.textContent = 'No videos found for your specific query.';
-        return;
-    }
 
     const row = document.createElement('div');
     row.className = 'row g-4';
