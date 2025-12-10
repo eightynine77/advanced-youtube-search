@@ -24,16 +24,13 @@
 ::-webkit-scrollbar {
     width: 8px;
 }
-
 ::-webkit-scrollbar-track {
     background: #f1f1f1;
 }
-
 ::-webkit-scrollbar-thumb {
     background: #ccc;
     border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
     background: #ff0000;
 }
@@ -41,13 +38,13 @@
 .search-filter-wrapper {
     display: flex;
     flex-direction: row;    
-    align-items: center;    
+    align-items: center;   
     margin-bottom: 10px;
-    gap: 15px;
+    gap: 10px;
 }
 
 .search-filter-wrapper .dropdown-toggle {
-    width: auto;            
+    width: auto;           
     text-align: left;
 }
 
@@ -85,7 +82,7 @@
     }
 
     .search-filter-wrapper .dropdown-toggle {
-        width: 100%;            
+        width: 100%;           
         display: flex;
         justify-content: space-between;
         align-items: center;

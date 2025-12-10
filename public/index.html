@@ -9,31 +9,33 @@
     <link rel="icon" type="image/x-icon" href="icon.png">
 </head>
 <body class="bg-light">
-    <div class="text-center mb-5">
-        <h1 class="display-5 fw-bold text-danger">advanced youtube search - lumigest</h1>
-        <p class="lead text-muted">search youtube with high accuracy</p>
-    </div>
-    <div class="row justify-content-center mb-4">
-        <div class="col-md-8 col-lg-6">
-            <div class="search-filter-wrapper">
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="searchFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        Default (Match Words)
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="searchFilterDropdown">
-                        <li><a class="dropdown-item active" href="#" data-value="default">default (match words)</a></li>
-                        <li><a class="dropdown-item" href="#" data-value="phrase">match whole word</a></li>
-                        <li><a class="dropdown-item" href="#" data-value="exact">exact title</a></li>
-                    </ul>
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold text-danger">advanced youtube search - lumigest</h1>
+            <p class="lead text-muted">search youtube with high accuracy</p>
+        </div>
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-8 col-lg-6">
+                <div class="search-filter-wrapper">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="searchFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            default (match words)
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="searchFilterDropdown">
+                            <li><a class="dropdown-item active" href="#" data-value="default">default (match words)</a></li>
+                            <li><a class="dropdown-item" href="#" data-value="phrase">match whole Word</a></li>
+                            <li><a class="dropdown-item" href="#" data-value="exact">exact title</a></li>
+                        </ul>
+                    </div>
+                    <small class="text-muted" id="filter-description">
+                        search for videos containing all your keywords.
+                    </small>
                 </div>
-                <small class="text-muted" id="filter-description">
-                    search for videos containing all your words.
-                </small>
-            </div>
-            <div class="input-group input-group-lg shadow-sm">
-                <input type="text" id="search-input" class="form-control" placeholder="Enter video title..." aria-label="Search term" tabindex="1">
-                <button id="search-button" class="btn btn-danger" type="button" tabindex="2">search</button>
-                <button id="stop-button" class="btn btn-secondary" type="button" tabindex="3">stop</button>
+                <div class="input-group input-group-lg shadow-sm">
+                    <input type="text" id="search-input" class="form-control" placeholder="Enter video title..." aria-label="Search term" tabindex="1">
+                    <button id="search-button" class="btn btn-danger" type="button" tabindex="2">search</button>
+                    <button id="stop-button" class="btn btn-secondary" type="button" tabindex="3">stop</button>
+                </div>
             </div>
         </div>
     </div>
