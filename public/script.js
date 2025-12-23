@@ -150,6 +150,14 @@ async function searchLoop(pageToken, pageNum) {
     }
 }
 
+function formatVideoDate(dateString) {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'short' }).toLowerCase();
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+}
+
 function displayResults(videos) {
     videos.forEach(video => {
         const col = document.createElement('div');
@@ -164,6 +172,12 @@ function displayResults(videos) {
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body d-flex flex-column';
         const title = document.createElement('h5');
+        
+        //date section
+        const dateElement = document.createElement('p');
+        dateElement.className = 'card-text small text-muted mb-2';
+        dateElement.textContent = `upload date: ${formatVideoDate(video.snippet.publishedAt)}`;
+
         title.className = 'card-title fs-6'; 
         title.textContent = video.snippet.title;
         const videoLink = document.createElement('a');
@@ -172,7 +186,10 @@ function displayResults(videos) {
         videoLink.rel = 'noopener noreferrer';
         videoLink.className = 'btn btn-outline-danger mt-auto'; 
         videoLink.textContent = 'Watch Video';
+
+        //append all elements to search result
         cardBody.appendChild(title);
+        cardBody.appendChild(dateElement);
         cardBody.appendChild(videoLink);
         card.appendChild(thumbnail);
         card.appendChild(cardBody);
