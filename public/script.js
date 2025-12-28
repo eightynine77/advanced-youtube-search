@@ -14,8 +14,6 @@ const filterDescription = document.getElementById('filter-description');
 const dateAfterInput = document.getElementById('date-after');
 const dateBeforeInput = document.getElementById('date-before');
 const clearDatesBtn = document.getElementById('clear-dates-button');
-setupDatePicker(dateAfterInput);
-setupDatePicker(dateBeforeInput);
 
 filterItems.forEach(item => {
     item.addEventListener('click', (e) => {
@@ -46,10 +44,7 @@ searchInput.addEventListener('keyup', function(event) {
 
 clearDatesBtn.addEventListener('click', () => {
     dateAfterInput.value = '';
-    dateAfterInput.type = 'text'; 
-    
     dateBeforeInput.value = '';
-    dateBeforeInput.type = 'text'; 
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -215,18 +210,5 @@ function displayResults(videos) {
         card.appendChild(cardBody);
         col.appendChild(card);
         resultsContainer.appendChild(col);
-    });
-}
-
-function setupDatePicker(input) {
-    input.addEventListener('focus', () => {
-        input.type = 'date';
-        input.showPicker(); 
-    });
-
-    input.addEventListener('blur', () => {
-        if (!input.value) {
-            input.type = 'text';
-        }
     });
 }
