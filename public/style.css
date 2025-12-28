@@ -61,7 +61,32 @@ body {
     text-align: left;
 }
 
+#date-filter-wrapper input[type="date"] {
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
+
+#date-filter-wrapper input[type="date"]:focus {
+    border-color: #ff0000; 
+    box-shadow: 0 0 0 0.25rem rgba(27, 27, 27, 0.25);
+}
+
 @media (max-width: 576px) {
+    #date-filter-wrapper {
+        flex-direction: column; 
+        gap: 10px !important;
+    }
+    
+    #date-filter-wrapper > div {
+        width: 100%; 
+    }
+
+    #clear-dates-button {
+        width: 100%; 
+    }
+
     .input-group {
         flex-wrap: wrap;
     }

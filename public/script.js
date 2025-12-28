@@ -11,6 +11,9 @@ const statusElement = document.getElementById('search-status');
 const filterDropdownBtn = document.getElementById('searchFilterDropdown');
 const filterItems = document.querySelectorAll('.dropdown-item');
 const filterDescription = document.getElementById('filter-description');
+const dateAfterInput = document.getElementById('date-after');
+const dateBeforeInput = document.getElementById('date-before');
+const clearDatesBtn = document.getElementById('clear-dates-button');
 
 filterItems.forEach(item => {
     item.addEventListener('click', (e) => {
@@ -37,6 +40,11 @@ searchInput.addEventListener('keyup', function(event) {
     if (event.key === 'Enter') {
         startSearch();
     }
+});
+
+clearDatesBtn.addEventListener('click', () => {
+    dateAfterInput.value = '';
+    dateBeforeInput.value = '';
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -85,9 +93,16 @@ function stopSearch() {
 async function searchLoop(pageToken, pageNum) {
     if (!isSearching) return;
 
+    const afterVal = dateAfterInput.value;
+    const beforeVal = dateBeforeInput.value;
+
+    let apiQuery = query; 
+    if (afterVal) apiQuery += ` after:${afterVal}`;
+    if (beforeVal) apiQuery += ` before:${beforeVal}`;
+
     statusElement.textContent = `Scanning page ${pageNum}... (Found: ${totalMatches})`;
 
-    let url = `/api/search?q=${encodeURIComponent(query)}`;
+    let url = `/api/search?q=${encodeURIComponent(apiQuery)}`;
     if (pageToken) {
         url += `&pageToken=${pageToken}`;
     }
