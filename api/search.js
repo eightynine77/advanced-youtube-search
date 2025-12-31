@@ -15,11 +15,14 @@ export default async function handler(req, res) {
     try {
         const youtubeResponse = await fetch(url);
         const data = await youtubeResponse.json();
+        if (data.error) {
+            throw new Error(`youTube API error: ${data.error.message} (Code: ${data.error.code})`);
+        }
         if (!youtubeResponse.ok) {
-            return res.status(youtubeResponse.status).json(data);
+            throw new Error(`HTTP error: ${youtubeResponse.status}`);
         }
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch data from YouTube API' });
+        res.status(500).json({ error: `An error occurred while searching.\n${error.message}` });
     }
 }

@@ -83,6 +83,11 @@ function stopSearch() {
     filterDropdownBtn.classList.remove('disabled'); 
     stopButton.disabled = true;
 
+    if (typeof overrideMessage === 'string' && overrideMessage.length) {
+        statusElement.textContent = overrideMessage;
+        return;
+    }
+
     if (totalMatches === 0) {
         statusElement.textContent = 'Search stopped. No matches found yet.';
     } else {
@@ -109,11 +114,19 @@ async function searchLoop(pageToken, pageNum) {
 
     try {
         const response = await fetch(url);
-        const data = await response.json();
-
         if (!response.ok) {
-            throw new Error(data.error || 'Unknown error');
+            let errorMessage = `Server error ${response.status}`;
+            try {
+                
+                const errData = await response.json();
+                if (errData.error) errorMessage = errData.error;
+            } catch (e) {
+                const text = await response.text();
+                if (text) errorMessage = text;
+            }
+            throw new Error(errorMessage);
         }
+        const data = await response.json();
 
         const videos = data.items;
         if (!videos || videos.length === 0) {
@@ -160,8 +173,7 @@ async function searchLoop(pageToken, pageNum) {
         }
 
     } catch (error) {
-        statusElement.textContent = `Network error: ${error.message}`;
-        stopSearch();
+        stopSearch(`error: ${error.message}`);
     }
 }
 
