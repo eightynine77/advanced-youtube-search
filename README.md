@@ -2,7 +2,7 @@
 this website provides a precise youTube search that returns video results based on literal text matches in titles, descriptions, and related metadata. unlike YouTube’s default algorithmic search, which ranks results by relevance, engagement, and creator popularity, this service emphasizes exact-word and phrase matching to surface videos that explicitly contain the queried terms
 
 ## screenshot
-<img width="732" height="348" alt="image" src="https://github.com/user-attachments/assets/57cbd229-a2de-45ec-8aed-1347ae8d4ee9" />
+<img width="600" height="348" alt="image" src="https://github.com/user-attachments/assets/57cbd229-a2de-45ec-8aed-1347ae8d4ee9" />
 
 
 ## try it out!
