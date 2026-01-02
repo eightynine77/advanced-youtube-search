@@ -117,7 +117,6 @@ async function searchLoop(pageToken, pageNum) {
         if (!response.ok) {
             let errorMessage = `Server error ${response.status}`;
             try {
-                
                 const errData = await response.json();
                 if (errData.error) errorMessage = errData.error;
             } catch (e) {
