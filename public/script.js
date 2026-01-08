@@ -127,8 +127,15 @@ async function searchLoop(pageToken, pageNum) {
         }
         const data = await response.json();
 
+        const nextPageToken = data.nextPageToken;
         const videos = data.items;
+
         if (!videos || videos.length === 0) {
+            if (nextPageToken) {
+                setTimeout(() => searchLoop(nextPageToken, pageNum + 1), 100);
+                return; 
+            }
+
             isSearching = false;
             statusElement.textContent = `Search complete. Found ${totalMatches} match(es).`;
             searchButton.disabled = false;
@@ -157,8 +164,6 @@ async function searchLoop(pageToken, pageNum) {
             totalMatches += exactMatches.length;
             displayResults(exactMatches);
         }
-
-        const nextPageToken = data.nextPageToken;
 
         if (isSearching && nextPageToken) {
             setTimeout(() => searchLoop(nextPageToken, pageNum + 1), 100);
