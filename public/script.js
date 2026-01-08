@@ -2,7 +2,6 @@ let isSearching = false;
 let totalMatches = 0;
 let query = '';
 let currentFilterMode = 'default'; 
-let deepSearchEnabled = false;
 
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
@@ -11,7 +10,6 @@ const resultsContainer = document.getElementById('results-container');
 const statusElement = document.getElementById('search-status');
 const filterDropdownBtn = document.getElementById('searchFilterDropdown');
 const filterItems = document.querySelectorAll('.dropdown-item');
-const deepSearchToggle = document.getElementById('deep-search-toggle');
 const filterDescription = document.getElementById('filter-description');
 const dateAfterInput = document.getElementById('date-after');
 const dateBeforeInput = document.getElementById('date-before');
@@ -33,10 +31,6 @@ filterItems.forEach(item => {
             filterDescription.textContent = 'Search for a video with this exact title.';
         }
     });
-});
-
-deepSearchToggle.addEventListener('change', (e) => {
-    deepSearchEnabled = e.target.checked;
 });
 
 searchButton.addEventListener('click', startSearch);
@@ -133,15 +127,8 @@ async function searchLoop(pageToken, pageNum) {
         }
         const data = await response.json();
 
-        const nextPageToken = data.nextPageToken;
         const videos = data.items;
-
         if (!videos || videos.length === 0) {
-            if (deepSearchEnabled && nextPageToken) {
-                setTimeout(() => searchLoop(nextPageToken, pageNum + 1), 100);
-                return; 
-            }
-
             isSearching = false;
             statusElement.textContent = `Search complete. Found ${totalMatches} match(es).`;
             searchButton.disabled = false;
@@ -170,6 +157,8 @@ async function searchLoop(pageToken, pageNum) {
             totalMatches += exactMatches.length;
             displayResults(exactMatches);
         }
+
+        const nextPageToken = data.nextPageToken;
 
         if (isSearching && nextPageToken) {
             setTimeout(() => searchLoop(nextPageToken, pageNum + 1), 100);
