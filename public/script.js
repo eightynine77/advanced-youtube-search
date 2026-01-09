@@ -14,6 +14,12 @@ const filterDescription = document.getElementById('filter-description');
 const dateAfterInput = document.getElementById('date-after');
 const dateBeforeInput = document.getElementById('date-before');
 const clearDatesBtn = document.getElementById('clear-dates-button');
+const modal = document.getElementById('api-modal');
+const settingsBtn = document.getElementById('settings-btn');
+const closeBtn = document.getElementById('close-modal-btn');
+const apiToggle = document.getElementById('api-toggle');
+const apiKeyInput = document.getElementById('user-api-key');
+const saveBtn = document.getElementById('save-settings-btn');
 
 filterItems.forEach(item => {
     item.addEventListener('click', (e) => {
@@ -53,6 +59,52 @@ document.addEventListener('DOMContentLoaded', () => {
         textarea.focus();
     }
 });
+
+settingsBtn.addEventListener('click', () => {
+    loadSettings(); 
+    modal.classList.remove('hidden');
+});
+
+closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+
+apiToggle.addEventListener('change', () => {
+    apiKeyInput.disabled = !apiToggle.checked;
+});
+
+saveBtn.addEventListener('click', () => {
+    const settings = {
+        useCustom: apiToggle.checked,
+        key: apiKeyInput.value.trim()
+    };
+    
+    localStorage.setItem('yt_search_settings', JSON.stringify(settings));
+    
+    const originalText = saveBtn.textContent;
+    saveBtn.textContent = "Saved!";
+    saveBtn.classList.replace('btn-primary', 'btn-success');
+
+    setTimeout(() => {
+        modal.classList.add('hidden'); 
+        saveBtn.textContent = originalText;
+        saveBtn.classList.replace('btn-success', 'btn-primary');
+    }, 800);
+});
+
+function loadSettings() {
+    const saved = localStorage.getItem('yt_search_settings');
+    if (saved) {
+        const settings = JSON.parse(saved);
+        apiToggle.checked = settings.useCustom;
+        apiKeyInput.value = settings.key || '';
+        
+        apiKeyInput.disabled = !settings.useCustom;
+    } else {
+        apiToggle.checked = false;
+        apiKeyInput.disabled = true;
+    }
+}
+
+loadSettings();
 
 function startSearch() {
     query = searchInput.value;
@@ -107,7 +159,18 @@ async function searchLoop(pageToken, pageNum) {
 
     statusElement.textContent = `Scanning page ${pageNum}... (Found: ${totalMatches})`;
 
-    let url = `/api/search?q=${encodeURIComponent(apiQuery)}`;
+    const savedSettings = JSON.parse(localStorage.getItem('yt_search_settings')) || {};
+    const useCustom = savedSettings.useCustom;
+    const userKey = savedSettings.key;
+
+    let url;
+
+    if (useCustom && userKey) {
+        url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=50&key=${userKey}&q=${encodeURIComponent(apiQuery)}`;
+    } else {
+        url = `/api/search?q=${encodeURIComponent(apiQuery)}`;
+    }
+
     if (pageToken) {
         url += `&pageToken=${pageToken}`;
     }

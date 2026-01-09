@@ -9,6 +9,11 @@
     <link rel="icon" type="image/x-icon" href="icon.png">
 </head>
 <body class="bg-light">
+    <div class="position-absolute top-0 end-0 p-3">
+        <button id="settings-btn" class="btn btn-sm btn-outline-secondary">
+            ⚙️ API Settings
+        </button>
+    </div>
     <div class="container pt-5 pb-1">
         <div class="text-center mb-5">
             <h1 class="display-5 fw-bold text-danger">advanced youtube search - lumigest</h1>
@@ -54,6 +59,27 @@
     <div class="container pb-5" style="overflow-x: hidden;">
         <div id="results-container" class="row g-4 w-100 mx-0"></div>
     </div>
+    </div>
+    <div id="api-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <button id="close-modal-btn" class="close-btn">&times;</button>
+            
+            <h4 class="mb-3">API Settings</h4>
+            
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <span class="fw-bold">Use your own API Key</span>
+                <label class="custom-switch">
+                    <input type="checkbox" id="api-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+    
+            <div class="mb-2">
+                <label for="user-api-key" class="form-label small text-muted">Your YouTube API Key</label>
+                <input type="text" id="user-api-key" class="form-control custom-input" placeholder="Paste your key here..." disabled>
+            </div>
+            <button id="save-settings-btn" class="btn w-100">Save Settings</button>
+        </div>
     </div>
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>
