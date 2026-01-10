@@ -78,13 +78,14 @@ saveBtn.addEventListener('click', () => {
     };
     
     localStorage.setItem('yt_search_settings', JSON.stringify(settings));
+
+    document.cookie = `yt_use_custom=${settings.useCustom}; path=/; max-age=31536000; SameSite=Lax`;
     
     const originalText = saveBtn.textContent;
     saveBtn.textContent = "Saved!";
     saveBtn.classList.replace('btn-primary', 'btn-success');
 
     setTimeout(() => {
-        modal.classList.add('hidden'); 
         saveBtn.textContent = originalText;
         saveBtn.classList.replace('btn-success', 'btn-primary');
     }, 800);
@@ -96,8 +97,10 @@ function loadSettings() {
         const settings = JSON.parse(saved);
         apiToggle.checked = settings.useCustom;
         apiKeyInput.value = settings.key || '';
-        
         apiKeyInput.disabled = !settings.useCustom;
+
+        localStorage.setItem('yt_search_settings', JSON.stringify(settings));
+        document.cookie = `yt_use_custom=${settings.useCustom}; path=/; max-age=31536000; SameSite=Lax`;
     } else {
         apiToggle.checked = false;
         apiKeyInput.disabled = true;
