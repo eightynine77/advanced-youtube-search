@@ -15,6 +15,21 @@ export default async function handler(req, res) {
     try {
         const youtubeResponse = await fetch(url);
         const data = await youtubeResponse.json();
+        if (data.items && q) {
+            const searchTerms = q.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0);
+
+            data.items = data.items.filter(item => {
+                const title = item.snippet.title || "";
+                const description = item.snippet.description || "";
+                const contentToCheck = (title + " " + description).toLowerCase();
+
+                return searchTerms.every(term => {
+                    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`\\b${escapedTerm}\\b`);
+                    return regex.test(contentToCheck);
+                });
+            });
+        }
         if (data.error) {
             throw new Error(`youTube API error: ${data.error.message} (Code: ${data.error.code})`);
         }
