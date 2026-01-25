@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
     const API_KEY = process.env.youtube_api_key;
-    const { q, pageToken } = req.query;
+    const { q, pageToken, publishedAfter, publishedBefore } = req.query;
 
     if (!q) {
         return res.status(400).json({ error: 'Search query "q" is required.' });
@@ -8,9 +8,9 @@ export default async function handler(req, res) {
 
     let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=50&key=${API_KEY}&q=${encodeURIComponent(q)}`;
 
-    if (pageToken) {
-        url += `&pageToken=${pageToken}`;
-    }
+    if (pageToken) url += `&pageToken=${pageToken}`;
+    if (publishedAfter) url += `&publishedAfter=${publishedAfter}`;
+    if (publishedBefore) url += `&publishedBefore=${publishedBefore}`;
 
     try {
         const youtubeResponse = await fetch(url);

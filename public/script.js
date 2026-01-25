@@ -157,8 +157,9 @@ async function searchLoop(pageToken, pageNum) {
     const beforeVal = dateBeforeInput.value;
 
     let apiQuery = query; 
-    if (afterVal) apiQuery += ` after:${afterVal}`;
-    if (beforeVal) apiQuery += ` before:${beforeVal}`;
+
+    let publishedAfter = null;
+    let publishedBefore = null;
 
     statusElement.textContent = `Scanning page ${pageNum}... (Found: ${totalMatches})`;
 
@@ -166,17 +167,38 @@ async function searchLoop(pageToken, pageNum) {
     const useCustom = savedSettings.useCustom;
     const userKey = savedSettings.key;
 
+    const formatDate = (dateStr, isEndOfDay = false) => {
+        if (!dateStr) return null;
+        const timePart = isEndOfDay ? 'T23:59:59Z' : 'T00:00:00Z';
+        return `${dateStr}${timePart}`;
+    };
+
+    if (afterVal) {
+        publishedAfter = formatDate(afterVal);
+    }
+    if (beforeVal) {
+        publishedBefore = formatDate(beforeVal, true); 
+    }
+
+    let activeApiKey = null;
+    
+    if (apiKeyInput.value.trim() !== '') {
+        activeApiKey = apiKeyInput.value.trim();
+    } else if (useCustom && userKey) {
+        activeApiKey = userKey;
+    }
+
     let url;
 
-    if (useCustom && userKey) {
-        url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=50&key=${userKey}&q=${encodeURIComponent(apiQuery)}`;
+    if (activeApiKey) {
+        url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=50&key=${activeApiKey}&q=${encodeURIComponent(apiQuery)}`;
     } else {
         url = `/api/search?q=${encodeURIComponent(apiQuery)}`;
     }
 
-    if (pageToken) {
-        url += `&pageToken=${pageToken}`;
-    }
+    if (pageToken) url += `&pageToken=${pageToken}`;
+    if (publishedAfter) url += `&publishedAfter=${publishedAfter}`;
+    if (publishedBefore) url += `&publishedBefore=${publishedBefore}`;
 
     try {
         const response = await fetch(url);
