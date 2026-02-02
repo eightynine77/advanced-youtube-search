@@ -10,3 +10,6 @@ this website provides a precise youTube search that returns video results based 
 
 ### the windows software version of this app is available for download
 you can download it [here](https://github.com/eightynine77/advanced-YTsearch-winforms)
+
+### windows and android app version of the site is also available
+download it [here](https://github.com/eightynine77/YTsearch-app)
