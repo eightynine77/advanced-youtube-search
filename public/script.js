@@ -21,6 +21,13 @@ const apiToggle = document.getElementById('api-toggle');
 const apiKeyInput = document.getElementById('user-api-key');
 const saveBtn = document.getElementById('save-settings-btn');
 
+function decodeHTMLEntities(text) {
+    if (!text) return '';
+    const textArea = document.createElement('textarea');
+    textArea.innerHTML = text;
+    return textArea.value;
+}
+
 filterItems.forEach(item => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
@@ -66,6 +73,12 @@ settingsBtn.addEventListener('click', () => {
 });
 
 closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+
+modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+        modal.classList.add('hidden');
+    }
+});
 
 apiToggle.addEventListener('change', () => {
     apiKeyInput.disabled = !apiToggle.checked;
@@ -236,7 +249,8 @@ async function searchLoop(pageToken, pageNum) {
         const normalizedQuery = query.toLowerCase().trim();
 
         const exactMatches = videos.filter(video => {
-            const title = video.snippet.title.toLowerCase().trim();
+            const decodedTitle = decodeHTMLEntities(video.snippet.title);
+            const title = decodedTitle.toLowerCase().trim();
             
             if (currentFilterMode === 'exact') {
                 return title === normalizedQuery;
@@ -285,7 +299,7 @@ function displayResults(videos) {
         card.className = 'card h-100 shadow-sm border-0'; 
         const thumbnail = document.createElement('img');
         thumbnail.src = video.snippet.thumbnails.high.url;
-        thumbnail.alt = video.snippet.title;
+        thumbnail.alt = decodeHTMLEntities(video.snippet.title);
         thumbnail.className = 'card-img-top';
         thumbnail.style.objectFit = 'cover';
         const cardBody = document.createElement('div');
@@ -298,7 +312,7 @@ function displayResults(videos) {
         dateElement.textContent = `upload date: ${formatVideoDate(video.snippet.publishedAt)}`;
 
         title.className = 'card-title fs-6'; 
-        title.textContent = video.snippet.title;
+        title.textContent = decodeHTMLEntities(video.snippet.title);
         const videoLink = document.createElement('a');
         videoLink.href = `https://www.youtube.com/watch?v=${video.id.videoId}`;
         videoLink.target = '_blank';
