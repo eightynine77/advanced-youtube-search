@@ -36,17 +36,23 @@
                 </div>
                 <div class="d-flex flex-wrap gap-2 mb-3" id="date-filter-wrapper">
                     <div class="flex-grow-1">
-                        <label for="date-after" class="form-label small text-muted mb-0">After:</label>
-                        <input type="date" id="date-after" class="form-control form-control-sm" aria-label="Date after">
+                            <label for="date-after" class="form-label small text-muted mb-0">After (MM-DD-YYYY):</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="date-after" class="form-control" value="MM-DD-YYYY" aria-label="Date after" style="caret-color: transparent;">
+                                <button class="btn btn-outline-secondary open-calendar-btn" type="button" data-target="date-after">📅</button>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <label for="date-before" class="form-label small text-muted mb-0">Before (MM-DD-YYYY):</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="date-before" class="form-control" value="MM-DD-YYYY" aria-label="Date before" style="caret-color: transparent;">
+                                <button class="btn btn-outline-secondary open-calendar-btn" type="button" data-target="date-before">📅</button>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-end">
+                            <button id="clear-dates-button" class="btn btn-outline-secondary btn-sm" type="button" style="height: 31px;">Clear</button>
+                        </div>
                     </div>
-                    <div class="flex-grow-1">
-                        <label for="date-before" class="form-label small text-muted mb-0">Before:</label>
-                        <input type="date" id="date-before" class="form-control form-control-sm" aria-label="Date before">
-                    </div>
-                    <div class="d-flex align-items-end">
-                        <button id="clear-dates-button" class="btn btn-outline-secondary btn-sm" type="button" style="height: 31px;">Clear</button>
-                    </div>
-                </div>
                 <div class="input-group input-group-lg shadow-sm">
                     <input type="text" id="search-input" class="form-control" placeholder="Enter video title..." aria-label="Search term" tabindex="1">
                     <button id="search-button" class="btn btn-danger" type="button" tabindex="2">search</button>
@@ -79,6 +85,29 @@
                 <input type="text" id="user-api-key" class="form-control custom-input" placeholder="Paste your key here..." disabled>
             </div>
             <button id="save-settings-btn" class="btn w-100">Save Settings</button>
+        </div>
+    </div>
+    <div id="calendar-modal" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 350px;">
+            <button id="close-calendar-btn" class="close-btn">&times;</button>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+                <button id="prev-month-btn" class="btn btn-sm btn-outline-secondary">&lt;</button>
+                <h5 id="calendar-month-year" class="m-0 fw-bold text-dark"></h5>
+                <button id="next-month-btn" class="btn btn-sm btn-outline-secondary">&gt;</button>
+            </div>
+            
+            <div class="d-flex text-center fw-bold text-muted small mb-2">
+                <div style="width: 14.28%;">Su</div>
+                <div style="width: 14.28%;">Mo</div>
+                <div style="width: 14.28%;">Tu</div>
+                <div style="width: 14.28%;">We</div>
+                <div style="width: 14.28%;">Th</div>
+                <div style="width: 14.28%;">Fr</div>
+                <div style="width: 14.28%;">Sa</div>
+            </div>
+            
+            <div id="calendar-days" class="d-flex flex-wrap text-center"></div>
         </div>
     </div>
     <script src="js/bootstrap.bundle.min.js"></script>

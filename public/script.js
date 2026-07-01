@@ -56,8 +56,8 @@ searchInput.addEventListener('keyup', function(event) {
 });
 
 clearDatesBtn.addEventListener('click', () => {
-    dateAfterInput.value = '';
-    dateBeforeInput.value = '';
+    dateAfterInput.value = 'MM-DD-YYYY';
+    dateBeforeInput.value = 'MM-DD-YYYY';
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -181,7 +181,12 @@ async function searchLoop(pageToken, pageNum) {
     const userKey = savedSettings.key;
 
     const formatDate = (dateStr, isEndOfDay = false) => {
+        if (!dateStr || dateStr.includes('M') || dateStr.includes('D') || dateStr.includes('Y')) return null;
         if (!dateStr) return null;
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            dateStr = `${parts[2]}-${parts[0]}-${parts[1]}`;
+        }
         const timePart = isEndOfDay ? 'T23:59:59Z' : 'T00:00:00Z';
         return `${dateStr}${timePart}`;
     };
@@ -290,6 +295,186 @@ function formatVideoDate(dateString) {
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
 }
+
+// --- Custom Modal Calendar Functionality ---
+const calendarModal = document.getElementById('calendar-modal');
+const closeCalendarBtn = document.getElementById('close-calendar-btn');
+const prevMonthBtn = document.getElementById('prev-month-btn');
+const nextMonthBtn = document.getElementById('next-month-btn');
+const calendarMonthYear = document.getElementById('calendar-month-year');
+const calendarDaysContainer = document.getElementById('calendar-days');
+const openCalendarBtns = document.querySelectorAll('.open-calendar-btn');
+
+let currentTargetInput = null;
+let calendarDate = new Date();
+
+function renderCalendar() {
+    calendarDaysContainer.innerHTML = '';
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+
+    // Setup Heading Text (e.g. "October 2026")
+    calendarMonthYear.textContent = calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    // Insert Empty Cells for Offset Days
+    for (let i = 0; i < firstDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'calendar-day-cell empty';
+        calendarDaysContainer.appendChild(emptyCell);
+    }
+
+    const currentInputValue = currentTargetInput ? currentTargetInput.value.trim() : '';
+
+    // Populate actual days
+    for (let day = 1; day <= totalDays; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day-cell';
+        dayCell.textContent = day;
+
+        const formattedMonth = String(month + 1).padStart(2, '0');
+        const formattedDay = String(day).padStart(2, '0');
+        
+        // FIX 2: Changed output format to MM-DD-YYYY
+        const cellDateStr = `${formattedMonth}-${formattedDay}-${year}`;
+
+        // Highlight selected day cell if active matches user field
+        if (currentInputValue === cellDateStr) {
+            dayCell.classList.add('selected');
+        }
+
+        // On selection click hook
+        dayCell.addEventListener('click', () => {
+            if (currentTargetInput) {
+                currentTargetInput.value = cellDateStr;
+            }
+            calendarModal.classList.add('hidden');
+        });
+
+        calendarDaysContainer.appendChild(dayCell);
+    }
+
+    // FIX 1: Add trailing empty cells to ensure the grid always has 42 cells (6 rows)
+    // This stops the modal height from jumping around when months change
+    const totalCellsRendered = firstDayIndex + totalDays;
+    const remainingCells = 42 - totalCellsRendered;
+    
+    for (let i = 0; i < remainingCells; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'calendar-day-cell empty';
+        calendarDaysContainer.appendChild(emptyCell);
+    }
+}
+
+// Bind Open Triggers to Buttons
+openCalendarBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        currentTargetInput = document.getElementById(targetId);
+
+        // Synchronize view to input content if valid date is already inside field
+        if (currentTargetInput && currentTargetInput.value) {
+            const parsedDate = new Date(currentTargetInput.value);
+            if (!isNaN(parsedDate)) {
+                calendarDate = parsedDate;
+            } else {
+                calendarDate = new Date();
+            }
+        } else {
+            calendarDate = new Date();
+        }
+
+        renderCalendar();
+        calendarModal.classList.remove('hidden');
+    });
+});
+
+// Window and Close Button Triggers
+closeCalendarBtn.addEventListener('click', () => calendarModal.classList.add('hidden'));
+
+calendarModal.addEventListener('click', (event) => {
+    if (event.target === calendarModal) {
+        calendarModal.classList.add('hidden');
+    }
+});
+
+// Month Pagination Nav Buttons
+prevMonthBtn.addEventListener('click', () => {
+    calendarDate.setMonth(calendarDate.getMonth() - 1);
+    renderCalendar();
+});
+
+nextMonthBtn.addEventListener('click', () => {
+    calendarDate.setMonth(calendarDate.getMonth() + 1);
+    renderCalendar();
+});
+
+// --- WinForms Style Masked Date Input ---
+function setupWinformsDateMask(input) {
+    if (!input) return;
+
+    // Handle Clicking (Segment Selection)
+    input.addEventListener('click', function() {
+        const pos = this.selectionStart;
+        if (pos < 3) this.setSelectionRange(0, 2); // Select MM
+        else if (pos < 6) this.setSelectionRange(3, 5); // Select DD
+        else this.setSelectionRange(6, 10); // Select YYYY
+    });
+
+    // Handle Typing and Auto-Advancing
+    input.addEventListener('keydown', function(e) {
+        const allowedKeys = ['Tab', 'ArrowLeft', 'ArrowRight'];
+        if (allowedKeys.includes(e.key)) return;
+
+        e.preventDefault(); // Stop normal typing
+        let val = this.value.split('');
+        let start = this.selectionStart;
+        let end = this.selectionEnd;
+
+        // Handle Backspace
+        if (e.key === 'Backspace') {
+            if (start !== end) { 
+                // If a whole segment is highlighted, reset that segment
+                if (start === 0) { val[0] = 'M'; val[1] = 'M'; this.value = val.join(''); this.setSelectionRange(0, 2); }
+                else if (start === 3) { val[3] = 'D'; val[4] = 'D'; this.value = val.join(''); this.setSelectionRange(3, 5); }
+                else if (start === 6) { val[6] = 'Y'; val[7] = 'Y'; val[8] = 'Y'; val[9] = 'Y'; this.value = val.join(''); this.setSelectionRange(6, 10); }
+            } else {
+                // If cursor is placed normally, backspace one character
+                let target = start - 1;
+                if (target === 2 || target === 5) target--; // Jump over the hyphens
+                if (target >= 0) {
+                    if (target < 2) val[target] = 'M';
+                    else if (target < 5) val[target] = 'D';
+                    else val[target] = 'Y';
+                    this.value = val.join('');
+                    this.setSelectionRange(target, target);
+                }
+            }
+            return;
+        }
+
+        // Only allow numbers to be typed
+        if (!/^\d$/.test(e.key)) return; 
+
+        // Typing logic with auto-jumps
+        if (start === 0 && end === 2) { val[0] = e.key; val[1] = 'M'; this.value = val.join(''); this.setSelectionRange(1, 1); }
+        else if (start === 1) { val[1] = e.key; this.value = val.join(''); this.setSelectionRange(3, 5); } // Jump to DD
+        
+        else if (start === 3 && end === 5) { val[3] = e.key; val[4] = 'D'; this.value = val.join(''); this.setSelectionRange(4, 4); }
+        else if (start === 4) { val[4] = e.key; this.value = val.join(''); this.setSelectionRange(6, 10); } // Jump to YYYY
+        
+        else if (start === 6 && end === 10) { val[6] = e.key; val[7] = 'Y'; val[8] = 'Y'; val[9] = 'Y'; this.value = val.join(''); this.setSelectionRange(7, 7); }
+        else if (start === 7) { val[7] = e.key; this.value = val.join(''); this.setSelectionRange(8, 8); }
+        else if (start === 8) { val[8] = e.key; this.value = val.join(''); this.setSelectionRange(9, 9); }
+        else if (start === 9) { val[9] = e.key; this.value = val.join(''); this.setSelectionRange(10, 10); } // Reached the end
+    });
+}
+
+// Hook it up to your fields
+setupWinformsDateMask(document.getElementById('date-after'));
+setupWinformsDateMask(document.getElementById('date-before'));
 
 function displayResults(videos) {
     videos.forEach(video => {

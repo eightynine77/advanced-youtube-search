@@ -189,6 +189,33 @@ input:checked + .slider:before {
     background-color: #ee3131;
 }
 
+/* Custom Calendar Styling */
+.calendar-day-cell {
+    width: 14.28%;
+    height: 38px;
+    line-height: 38px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+    font-size: 0.9rem;
+    color: #212529;
+}
+
+.calendar-day-cell:hover:not(.empty) {
+    background-color: #f1f3f5;
+}
+
+.calendar-day-cell.empty {
+    cursor: default;
+    background: none !important;
+}
+
+.calendar-day-cell.selected {
+    background-color: #ff0000 !important;
+    color: white !important;
+    font-weight: bold;
+}
+
 @media (max-width: 576px) {
     #date-filter-wrapper {
         flex-direction: column; 
