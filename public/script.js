@@ -411,7 +411,7 @@ nextMonthBtn.addEventListener('click', () => {
     renderCalendar();
 });
 
-// --- WinForms Style Masked Date Input ---
+// --- WinForms Style Masked Date Input (Mobile & Desktop Safe) ---
 function setupWinformsDateMask(input) {
     if (!input) return;
 
@@ -423,52 +423,98 @@ function setupWinformsDateMask(input) {
         else this.setSelectionRange(6, 10); // Select YYYY
     });
 
-    // Handle Typing and Auto-Advancing
-    input.addEventListener('keydown', function(e) {
-        const allowedKeys = ['Tab', 'ArrowLeft', 'ArrowRight'];
-        if (allowedKeys.includes(e.key)) return;
+    // The core logic function for inserting/deleting
+    function processInput(el, action, char) {
+        let val = el.value.split('');
+        let start = el.selectionStart;
+        let end = el.selectionEnd;
 
-        e.preventDefault(); // Stop normal typing
-        let val = this.value.split('');
-        let start = this.selectionStart;
-        let end = this.selectionEnd;
-
-        // Handle Backspace
-        if (e.key === 'Backspace') {
+        if (action === 'delete') {
             if (start !== end) { 
-                // If a whole segment is highlighted, reset that segment
-                if (start === 0) { val[0] = 'M'; val[1] = 'M'; this.value = val.join(''); this.setSelectionRange(0, 2); }
-                else if (start === 3) { val[3] = 'D'; val[4] = 'D'; this.value = val.join(''); this.setSelectionRange(3, 5); }
-                else if (start === 6) { val[6] = 'Y'; val[7] = 'Y'; val[8] = 'Y'; val[9] = 'Y'; this.value = val.join(''); this.setSelectionRange(6, 10); }
+                if (start === 0) { val[0] = 'M'; val[1] = 'M'; el.value = val.join(''); el.setSelectionRange(0, 2); }
+                else if (start === 3) { val[3] = 'D'; val[4] = 'D'; el.value = val.join(''); el.setSelectionRange(3, 5); }
+                else if (start === 6) { val[6] = 'Y'; val[7] = 'Y'; val[8] = 'Y'; val[9] = 'Y'; el.value = val.join(''); el.setSelectionRange(6, 10); }
             } else {
-                // If cursor is placed normally, backspace one character
                 let target = start - 1;
                 if (target === 2 || target === 5) target--; // Jump over the hyphens
                 if (target >= 0) {
                     if (target < 2) val[target] = 'M';
                     else if (target < 5) val[target] = 'D';
                     else val[target] = 'Y';
-                    this.value = val.join('');
-                    this.setSelectionRange(target, target);
+                    el.value = val.join('');
+                    el.setSelectionRange(target, target);
                 }
             }
-            return;
+        } else if (action === 'insert' && /^\d$/.test(char)) {
+            if (start === 0 && end === 2) { val[0] = char; val[1] = 'M'; el.value = val.join(''); el.setSelectionRange(1, 1); }
+            else if (start === 1) {
+            const month = parseInt(val[0] + char, 10);
+
+                // Only allow 01-12
+                if (month >= 1 && month <= 12) {
+                    val[1] = char;
+                    el.value = val.join('');
+                    el.setSelectionRange(3, 5);
+                }
+                // Otherwise ignore the keystroke
+            }
+            
+            else if (start === 3 && end === 5) {
+                // First day digit can only be 0-3
+                if (char >= '0' && char <= '3') {
+                    val[3] = char;
+                    val[4] = 'D';
+                    el.value = val.join('');
+                    el.setSelectionRange(4, 4);
+                }
+            }
+
+            else if (start === 4) {
+            const day = parseInt(val[3] + char, 10);
+        
+            // Only allow 01-31
+            if (day >= 1 && day <= 31) {
+                val[4] = char;
+                el.value = val.join('');
+                el.setSelectionRange(6, 10);
+            }
+            // Otherwise ignore the keystroke
         }
+            
+            else if (start === 6 && end === 10) { val[6] = char; val[7] = 'Y'; val[8] = 'Y'; val[9] = 'Y'; el.value = val.join(''); el.setSelectionRange(7, 7); }
+            else if (start === 7) { val[7] = char; el.value = val.join(''); el.setSelectionRange(8, 8); }
+            else if (start === 8) { val[8] = char; el.value = val.join(''); el.setSelectionRange(9, 9); }
+            else if (start === 9) { val[9] = char; el.value = val.join(''); el.setSelectionRange(10, 10); }
+        }
+    }
 
-        // Only allow numbers to be typed
-        if (!/^\d$/.test(e.key)) return; 
+    // PRIMARY LISTENER: Catches Mobile Virtual Keyboard Inputs safely
+    input.addEventListener('beforeinput', function(e) {
+        if (e.inputType === 'deleteContentBackward') {
+            e.preventDefault();
+            processInput(this, 'delete', null);
+        } else if (e.inputType === 'insertText') {
+            e.preventDefault();
+            processInput(this, 'insert', e.data);
+        }
+    });
 
-        // Typing logic with auto-jumps
-        if (start === 0 && end === 2) { val[0] = e.key; val[1] = 'M'; this.value = val.join(''); this.setSelectionRange(1, 1); }
-        else if (start === 1) { val[1] = e.key; this.value = val.join(''); this.setSelectionRange(3, 5); } // Jump to DD
-        
-        else if (start === 3 && end === 5) { val[3] = e.key; val[4] = 'D'; this.value = val.join(''); this.setSelectionRange(4, 4); }
-        else if (start === 4) { val[4] = e.key; this.value = val.join(''); this.setSelectionRange(6, 10); } // Jump to YYYY
-        
-        else if (start === 6 && end === 10) { val[6] = e.key; val[7] = 'Y'; val[8] = 'Y'; val[9] = 'Y'; this.value = val.join(''); this.setSelectionRange(7, 7); }
-        else if (start === 7) { val[7] = e.key; this.value = val.join(''); this.setSelectionRange(8, 8); }
-        else if (start === 8) { val[8] = e.key; this.value = val.join(''); this.setSelectionRange(9, 9); }
-        else if (start === 9) { val[9] = e.key; this.value = val.join(''); this.setSelectionRange(10, 10); } // Reached the end
+    // FALLBACK LISTENER: Handles Desktop Keyboards (Tab, Arrows, and strict Desktop Backspace)
+    input.addEventListener('keydown', function(e) {
+        // Allow Desktop Navigation
+        if (['Tab', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+
+        // On pure desktop browsers, prevent default to avoid double-firing, and process manually
+        if (e.key === 'Backspace') {
+            e.preventDefault();
+            processInput(this, 'delete', null);
+        } else if (/^\d$/.test(e.key)) {
+            e.preventDefault();
+            processInput(this, 'insert', e.key);
+        } else if (e.key !== 'Unidentified') {
+            // Block all other keys (letters, symbols) except mobile 'Unidentified' strokes
+            e.preventDefault(); 
+        }
     });
 }
 
