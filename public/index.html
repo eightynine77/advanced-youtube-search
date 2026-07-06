@@ -93,7 +93,25 @@
             
             <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
                 <button id="prev-month-btn" class="btn btn-sm btn-outline-secondary">&lt;</button>
-                <h5 id="calendar-month-year" class="m-0 fw-bold text-dark"></h5>
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <input type="text" id="calendar-month-input" list="month-list" class="form-control form-control-sm fw-bold text-center text-dark" style="width: 105px; font-size: 1rem;" placeholder="Month">
+                    <datalist id="month-list">
+                        <option value="January"></option>
+                        <option value="February"></option>
+                        <option value="March"></option>
+                        <option value="April"></option>
+                        <option value="May"></option>
+                        <option value="June"></option>
+                        <option value="July"></option>
+                        <option value="August"></option>
+                        <option value="September"></option>
+                        <option value="October"></option>
+                        <option value="November"></option>
+                        <option value="December"></option>
+                    </datalist>
+                    
+                    <input type="number" id="calendar-year-input" class="form-control form-control-sm fw-bold text-center text-dark" style="width: 75px; font-size: 1rem;" min="1970" max="2100">
+                </div>
                 <button id="next-month-btn" class="btn btn-sm btn-outline-secondary">&gt;</button>
             </div>
             

@@ -301,7 +301,9 @@ const calendarModal = document.getElementById('calendar-modal');
 const closeCalendarBtn = document.getElementById('close-calendar-btn');
 const prevMonthBtn = document.getElementById('prev-month-btn');
 const nextMonthBtn = document.getElementById('next-month-btn');
-const calendarMonthYear = document.getElementById('calendar-month-year');
+const calendarMonthInput = document.getElementById('calendar-month-input');
+const calendarYearInput = document.getElementById('calendar-year-input');
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const calendarDaysContainer = document.getElementById('calendar-days');
 const openCalendarBtns = document.querySelectorAll('.open-calendar-btn');
 
@@ -310,11 +312,17 @@ let calendarDate = new Date();
 
 function renderCalendar() {
     calendarDaysContainer.innerHTML = '';
+    
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
 
-    // Setup Heading Text (e.g. "October 2026")
-    calendarMonthYear.textContent = calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+    // Setup Heading Inputs (Only overwrite if the user isn't actively typing in them)
+    if (document.activeElement !== calendarMonthInput) {
+        calendarMonthInput.value = monthNames[month];
+    }
+    if (document.activeElement !== calendarYearInput) {
+        calendarYearInput.value = year;
+    }
 
     const firstDayIndex = new Date(year, month, 1).getDay();
     const totalDays = new Date(year, month + 1, 0).getDate();
@@ -521,6 +529,48 @@ function setupWinformsDateMask(input) {
 // Hook it up to your fields
 setupWinformsDateMask(document.getElementById('date-after'));
 setupWinformsDateMask(document.getElementById('date-before'));
+
+// Jump to custom Year LIVE
+calendarYearInput.addEventListener('input', function() {
+    let newYear = parseInt(this.value);
+    // Only jump if they have typed a valid 4-digit year
+    if (!isNaN(newYear) && newYear >= 1970 && newYear <= 2200) { 
+        calendarDate.setFullYear(newYear);
+        renderCalendar();
+    }
+});
+
+// Clean up Year if user clicks away and left it invalid
+calendarYearInput.addEventListener('change', function() {
+    let newYear = parseInt(this.value);
+    if (isNaN(newYear) || newYear < 1970 || newYear > 2200) {
+        this.value = calendarDate.getFullYear(); 
+    }
+});
+
+// Jump to custom Month LIVE
+calendarMonthInput.addEventListener('input', function() {
+    let inputVal = this.value.trim().toLowerCase();
+    if (!inputVal) return;
+    
+    // Check if what they typed exactly matches a month
+    let newMonthIndex = monthNames.findIndex(m => m.toLowerCase() === inputVal);
+    
+    // Quality of life: if they type "jan" or "feb", find the prefix match instantly
+    if (newMonthIndex === -1) {
+        newMonthIndex = monthNames.findIndex(m => m.toLowerCase().startsWith(inputVal));
+    }
+
+    if (newMonthIndex !== -1) {
+        calendarDate.setMonth(newMonthIndex);
+        renderCalendar();
+    }
+});
+
+// Auto-fill full month name nicely when user clicks away
+calendarMonthInput.addEventListener('change', function() {
+    this.value = monthNames[calendarDate.getMonth()];
+});
 
 function displayResults(videos) {
     videos.forEach(video => {
