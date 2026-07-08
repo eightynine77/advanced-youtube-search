@@ -6,8 +6,10 @@ let currentFilterMode = 'default';
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
 const stopButton = document.getElementById('stop-button');
+const removeDuplicatesButton = document.getElementById('remove-duplicates-button');
 const resultsContainer = document.getElementById('results-container');
 const statusElement = document.getElementById('search-status');
+const removedDuplicatesText = document.getElementById('removed-duplicates-status');
 const filterDropdownBtn = document.getElementById('searchFilterDropdown');
 const filterItems = document.querySelectorAll('.dropdown-item');
 const filterDescription = document.getElementById('filter-description');
@@ -48,6 +50,47 @@ filterItems.forEach(item => {
 
 searchButton.addEventListener('click', startSearch);
 stopButton.addEventListener('click', stopSearch);
+
+removeDuplicatesButton.addEventListener('click', () => {
+    // A Set allows us to efficiently store unique values
+    const seenIds = new Set();
+    
+    // Grab all the currently rendered video cards
+    // Targeting the col wrapper created in displayResults()
+    const resultItems = resultsContainer.querySelectorAll('.col-12.col-sm-6.col-md-4.col-lg-3');
+    
+    let removedCount = 0;
+
+    resultItems.forEach(item => {
+        // Find the "Watch Video" anchor tag inside the card
+        const videoLink = item.querySelector('a'); 
+        
+        if (videoLink && videoLink.href) {
+            // Extract the video ID from the '?v=' URL parameter
+            const url = new URL(videoLink.href);
+            const videoId = url.searchParams.get('v');
+
+            if (videoId) {
+                if (seenIds.has(videoId)) {
+                    // We've seen this ID before, so remove this HTML element entirely
+                    item.remove(); 
+                    removedCount++;
+                } else {
+                    // First time seeing this ID, add it to our tracker
+                    seenIds.add(videoId); 
+                }
+            }
+        }
+    });
+
+    // Provide visual feedback to the user via the status element
+    if (removedCount > 0) {
+        totalMatches -= removedCount; // Keep the internal counter accurate
+        removedDuplicatesText.textContent += ` (Removed ${removedCount} duplicates)`;
+    } else if (resultsContainer.children.length > 0) {
+        removedDuplicatesText.textContent += ` (No duplicates found)`;
+    }
+});
 
 searchInput.addEventListener('keyup', function(event) {
     if (event.key === 'Enter') {

@@ -216,7 +216,38 @@ input:checked + .slider:before {
     font-weight: bold;
 }
 
+#remove-duplicates-button {
+    background-color: transparent;
+    color: #198754;              /* Bootstrap success green */
+    border: 1px solid #198754;
+    transition: all 0.2s ease;
+}
+
+#remove-duplicates-button:hover {
+    background-color: #198754;
+    color: white;
+    border-color: #198754;
+}
+
+#remove-duplicates-button:focus,
+#remove-duplicates-button:active {
+    background-color: #198754;
+    color: white;
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+#removed-duplicates-status {
+    font-style: italic;
+    color: #ff0000 !important;
+}
+
 @media (max-width: 576px) {
+    #remove-duplicates-button {
+        width: 100%;
+        margin-top: 5px;
+    }
+
     #date-filter-wrapper {
         flex-direction: column; 
         gap: 10px !important;
