@@ -86,9 +86,9 @@ removeDuplicatesButton.addEventListener('click', () => {
     // Provide visual feedback to the user via the status element
     if (removedCount > 0) {
         totalMatches -= removedCount; // Keep the internal counter accurate
-        removedDuplicatesText.textContent += ` (Removed ${removedCount} duplicates)`;
+        removedDuplicatesText.textContent = `Removed ${removedCount} duplicate${removedCount === 1 ? '' : 's'} — ${totalMatches} search result${totalMatches === 1 ? '' : 's'} remaining`;
     } else if (resultsContainer.children.length > 0) {
-        removedDuplicatesText.textContent += ` (No duplicates found)`;
+        removedDuplicatesText.textContent = ` No duplicates found`;
     }
 });
 
