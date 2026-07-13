@@ -108,6 +108,52 @@ document.addEventListener('DOMContentLoaded', () => {
     if (textarea) {
         textarea.focus();
     }
+
+    // --- NEW: Parse URL parameters on load ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const qParam = urlParams.get('q');
+    
+    if (qParam) {
+        // 1. Fill out the search input
+        searchInput.value = qParam;
+
+        // 2. Set the Filter dropdown
+        const filterParam = urlParams.get('filter');
+        let targetDataValue = 'default'; // matchWords
+        if (filterParam === 'wholeWord') targetDataValue = 'phrase';
+        else if (filterParam === 'exactTitle') targetDataValue = 'exact';
+        
+        // Find the dropdown item and click it programmatically to run your existing event listeners
+        const targetDropdownItem = Array.from(filterItems).find(item => item.getAttribute('data-value') === targetDataValue);
+        if (targetDropdownItem) {
+            targetDropdownItem.click(); 
+        }
+
+        // Helper to convert URL format (YYYY-MM-DD) back to Input format (MM-DD-YYYY)
+        const convertToUSFormat = (isoStr) => {
+            if (!isoStr) return null;
+            const parts = isoStr.split('-');
+            if (parts.length === 3) return `${parts[1]}-${parts[2]}-${parts[0]}`;
+            return null;
+        };
+
+        // 3. Set the Date After
+        const afterDateParam = urlParams.get('afterDate');
+        if (afterDateParam) {
+            const usDate = convertToUSFormat(afterDateParam);
+            if (usDate) dateAfterInput.value = usDate;
+        }
+
+        // 4. Set the Date Before
+        const beforeDateParam = urlParams.get('beforeDate');
+        if (beforeDateParam) {
+            const usDate = convertToUSFormat(beforeDateParam);
+            if (usDate) dateBeforeInput.value = usDate;
+        }
+
+        // 5. Automatically start the search
+        startSearch();
+    }
 });
 
 settingsBtn.addEventListener('click', () => {
@@ -172,6 +218,37 @@ function startSearch() {
         statusElement.textContent = 'Please enter a search term.';
         return;
     }
+
+    // --- NEW: Update Document Title ---
+    document.title = `search: ${query} | advanced youtube search - lumigest`;
+
+    // --- NEW: Update URL Parameters ---
+    const urlParams = new URLSearchParams();
+    urlParams.set('q', query);
+
+    // Map internal filter state to the URL terms you requested
+    let filterParam = 'matchWords';
+    if (currentFilterMode === 'phrase') filterParam = 'wholeWord';
+    if (currentFilterMode === 'exact') filterParam = 'exactTitle';
+    urlParams.set('filter', filterParam);
+
+    // Helper to convert Input format (MM-DD-YYYY) to URL format (YYYY-MM-DD)
+    const convertToISO = (dateStr) => {
+        if (!dateStr || dateStr.includes('M') || dateStr.includes('D') || dateStr.includes('Y')) return null;
+        const parts = dateStr.split('-');
+        if (parts.length === 3) return `${parts[2]}-${parts[0]}-${parts[1]}`;
+        return null;
+    };
+
+    const afterISO = convertToISO(dateAfterInput.value);
+    if (afterISO) urlParams.set('afterDate', afterISO);
+
+    const beforeISO = convertToISO(dateBeforeInput.value);
+    if (beforeISO) urlParams.set('beforeDate', beforeISO);
+
+    // Push the clean URL to the browser without reloading the page
+    const newURL = `${window.location.pathname}?${urlParams.toString()}`;
+    window.history.pushState({ path: newURL }, '', newURL);
 
     isSearching = true;
     totalMatches = 0;
