@@ -2,6 +2,61 @@ let isSearching = false;
 let totalMatches = 0;
 let query = '';
 let currentFilterMode = 'default'; 
+// --- NEW: CACHE VARIABLES ---
+let currentSearchSignature = ''; 
+let currentCachedResults = [];   
+
+// --- NEW: INDEXEDDB SETUP ---
+const DB_NAME = 'LumigestYTDB';
+const STORE_NAME = 'SearchCache';
+const DB_VERSION = 1;
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function getCache(id) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.get(id);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function setCache(id, data) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.put({ id, ...data });
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function clearCache() {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.clear();
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+    });
+}
 
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
@@ -87,6 +142,26 @@ removeDuplicatesButton.addEventListener('click', () => {
     if (removedCount > 0) {
         totalMatches -= removedCount; // Keep the internal counter accurate
         removedDuplicatesText.textContent = `Removed ${removedCount} duplicate${removedCount === 1 ? '' : 's'} — ${totalMatches} search result${totalMatches === 1 ? '' : 's'} remaining`;
+        
+        // --- NEW: REMOVE DUPLICATES FROM CACHE AS WELL ---
+        if (currentCachedResults.length > 0) {
+            const seenIdsCache = new Set();
+            const uniqueCache = [];
+
+            for (const video of currentCachedResults) {
+                const videoId = video.id.videoId;
+                if (!seenIdsCache.has(videoId)) {
+                    seenIdsCache.add(videoId);
+                    uniqueCache.push(video);
+                }
+            }
+
+            currentCachedResults = uniqueCache;
+            setCache('latestSearch', { 
+                signature: currentSearchSignature, 
+                results: currentCachedResults 
+            }).catch(e => console.error("Cache update error:", e));
+        }        
     } else if (resultsContainer.children.length > 0) {
         removedDuplicatesText.textContent = ` No duplicates found`;
     }
@@ -211,7 +286,7 @@ function loadSettings() {
 
 loadSettings();
 
-function startSearch() {
+async function startSearch() {
     query = searchInput.value;
     
     if (query.trim() === '') {
@@ -219,20 +294,16 @@ function startSearch() {
         return;
     }
 
-    // --- NEW: Update Document Title ---
     document.title = `search: ${query} | advanced youtube search - lumigest`;
 
-    // --- NEW: Update URL Parameters ---
     const urlParams = new URLSearchParams();
     urlParams.set('q', query);
 
-    // Map internal filter state to the URL terms you requested
     let filterParam = 'matchWords';
     if (currentFilterMode === 'phrase') filterParam = 'wholeWord';
     if (currentFilterMode === 'exact') filterParam = 'exactTitle';
     urlParams.set('filter', filterParam);
 
-    // Helper to convert Input format (MM-DD-YYYY) to URL format (YYYY-MM-DD)
     const convertToISO = (dateStr) => {
         if (!dateStr || dateStr.includes('M') || dateStr.includes('D') || dateStr.includes('Y')) return null;
         const parts = dateStr.split('-');
@@ -246,20 +317,59 @@ function startSearch() {
     const beforeISO = convertToISO(dateBeforeInput.value);
     if (beforeISO) urlParams.set('beforeDate', beforeISO);
 
-    // Push the clean URL to the browser without reloading the page
     const newURL = `${window.location.pathname}?${urlParams.toString()}`;
     window.history.pushState({ path: newURL }, '', newURL);
 
+    // --- NEW: GENERATE SEARCH SIGNATURE ---
+    const newSignature = `${query}|${currentFilterMode}|${afterISO || ''}|${beforeISO || ''}`;
+
     isSearching = true;
-    totalMatches = 0;
-    resultsContainer.innerHTML = '';
-    statusElement.textContent = 'Starting search...';
-    
     searchButton.disabled = true;
     searchInput.disabled = true;
     filterDropdownBtn.classList.add('disabled'); 
     stopButton.disabled = false;
 
+    // --- NEW: CHECK CACHE BEFORE HITTING API ---
+    try {
+        const cacheRecord = await getCache('latestSearch');
+        if (cacheRecord && cacheRecord.signature === newSignature) {
+            
+            // We have a match! Load from DB.
+            resultsContainer.innerHTML = '';
+            totalMatches = cacheRecord.results.length;
+            currentCachedResults = cacheRecord.results;
+            currentSearchSignature = newSignature;
+            
+            if (totalMatches > 0) {
+                displayResults(cacheRecord.results);
+            }
+            
+            statusElement.textContent = `Search loaded from cache. Found ${totalMatches} match(es).`;
+            
+            // Reset UI and stop execution so we don't hit the API
+            isSearching = false;
+            searchButton.disabled = false;
+            searchInput.disabled = false;
+            filterDropdownBtn.classList.remove('disabled'); 
+            stopButton.disabled = true;
+            return; 
+            
+        } else {
+            // No match. Clear old cache and prepare for new API pull
+            await clearCache();
+            currentSearchSignature = newSignature;
+            currentCachedResults = [];
+        }
+    } catch (e) {
+        console.error("Cache error:", e);
+        currentSearchSignature = newSignature;
+        currentCachedResults = [];
+    }
+
+    // If no cache hit, proceed with the normal API search
+    totalMatches = 0;
+    resultsContainer.innerHTML = '';
+    statusElement.textContent = 'Starting search...';
     searchLoop(null, 1); 
 }
 
@@ -390,6 +500,13 @@ async function searchLoop(pageToken, pageNum) {
         if (exactMatches.length > 0) {
             totalMatches += exactMatches.length;
             displayResults(exactMatches);
+
+            // --- NEW: UPDATE CACHE INCREMENTALLY ---
+            currentCachedResults.push(...exactMatches);
+            setCache('latestSearch', { 
+                signature: currentSearchSignature, 
+                results: currentCachedResults 
+            }).catch(e => console.error("Cache save error:", e));
         }
 
         if (isSearching && nextPageToken) {
