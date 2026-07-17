@@ -840,7 +840,7 @@ loadCacheBtn.addEventListener('click', async () => {
         const cache = await getCache('latestSearch');
         if (cache) {
             cacheTextArea.value = JSON.stringify(cache, null, 2); 
-            showCacheStatus('Cache loaded into text area!');
+            showCacheStatus('Search cache loaded!');
         } else {
             cacheTextArea.value = '';
             showCacheStatus('No cache found.', true);
