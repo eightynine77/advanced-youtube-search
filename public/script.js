@@ -889,8 +889,7 @@ function formatImportSuccess(signature) {
         const reconstructedUrl = `${window.location.origin}${window.location.pathname}?${urlParams.toString()}`;
 
         return `Search Cache imported successfully!<br>
-                <span class="text-muted fw-normal" style="font-size: 0.85em;">Search term: ${searchTerm}</span><br>
-                <span class="text-muted fw-normal" style="font-size: 0.85em; word-break: break-all;">URL: ${reconstructedUrl}</span>`;
+                <span class="text-muted fw-normal" style="font-size: 0.85em; word-break: break-all;">the search URL: <a href="${reconstructedUrl}">${reconstructedUrl}</a></span>`;
     } catch (e) {
         // Fallback just in case the signature format is entirely unexpected
         return `Search Cache imported successfully!<br>
