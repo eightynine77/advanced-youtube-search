@@ -232,15 +232,23 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 settingsBtn.addEventListener('click', () => {
-    loadSettings(); 
+    loadSettings();
     modal.classList.remove('hidden');
 });
 
-closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+closeBtn.addEventListener('click', () => {
+    modal.classList.add('hidden');
+
+    cacheTextArea.value = '';
+    cacheStatusMsg.innerHTML = '';
+});
 
 modal.addEventListener('click', (event) => {
     if (event.target === modal) {
         modal.classList.add('hidden');
+
+        cacheTextArea.value = '';
+        cacheStatusMsg.innerHTML = '';
     }
 });
 
@@ -807,6 +815,201 @@ calendarMonthInput.addEventListener('input', function() {
 // Auto-fill full month name nicely when user clicks away
 calendarMonthInput.addEventListener('change', function() {
     this.value = monthNames[calendarDate.getMonth()];
+});
+
+// ==========================================
+// CACHE IMPORT/EXPORT & DELETION LOGIC
+// ==========================================
+
+const cacheTextArea = document.getElementById('cache-text-area');
+const copyCacheBtn = document.getElementById('copy-cache-btn');
+const importTextBtn = document.getElementById('import-text-btn');
+const exportFileBtn = document.getElementById('export-file-btn');
+const importFileTrigger = document.getElementById('import-file-trigger');
+const importFileInput = document.getElementById('import-file-input');
+const clearCacheBtn = document.getElementById('clear-cache-btn');
+const cacheStatusMsg = document.getElementById('cache-status-message');
+const loadCacheBtn = document.getElementById('load-cache-btn');
+
+// 0. Load Cache into Textarea
+loadCacheBtn.addEventListener('click', async () => {
+    try {
+        loadCacheBtn.textContent = '⏳ Loading...';
+        loadCacheBtn.disabled = true;
+        
+        const cache = await getCache('latestSearch');
+        if (cache) {
+            cacheTextArea.value = JSON.stringify(cache, null, 2); 
+            showCacheStatus('Cache loaded into text area!');
+        } else {
+            cacheTextArea.value = '';
+            showCacheStatus('No cache found.', true);
+        }
+    } catch (e) {
+        console.error("Error loading cache into textarea:", e);
+        showCacheStatus('Error loading cache.', true);
+    } finally {
+        // Reset the button text and state once done
+        loadCacheBtn.textContent = '👁️ Show Search Cache';
+        loadCacheBtn.disabled = false;
+    }
+});
+
+// Helper to show temporary status messages in the modal
+function showCacheStatus(msg, isError = false) {
+    cacheStatusMsg.innerHTML = msg; // Changed to innerHTML to support <br> tags
+    cacheStatusMsg.style.color = isError ? '#ff0000' : '#198754';
+}
+
+// Helper to format the detailed success message
+function formatImportSuccess(signature) {
+    try {
+        // The signature is stored as: "query|filter|afterDate|beforeDate"
+        // Example: "big bill hell|default||2020-01-01"
+        const parts = signature.split('|');
+        const searchTerm = parts[0] || 'Unknown';
+        const filterMode = parts[1] || 'default';
+        const afterDate = parts[2] || '';
+        const beforeDate = parts[3] || '';
+        
+        // Reconstruct the URL for the visual message
+        const urlParams = new URLSearchParams();
+        if (searchTerm) urlParams.set('q', searchTerm);
+        
+        // Map the internal filter mode back to the URL parameter string
+        let filterParam = 'matchWords';
+        if (filterMode === 'phrase') filterParam = 'wholeWord';
+        if (filterMode === 'exact') filterParam = 'exactTitle';
+        urlParams.set('filter', filterParam);
+        
+        // Add dates if they exist in the signature
+        if (afterDate) urlParams.set('afterDate', afterDate);
+        if (beforeDate) urlParams.set('beforeDate', beforeDate);
+        
+        const reconstructedUrl = `${window.location.origin}${window.location.pathname}?${urlParams.toString()}`;
+
+        return `Search Cache imported successfully!<br>
+                <span class="text-muted fw-normal" style="font-size: 0.85em;">Search term: ${searchTerm}</span><br>
+                <span class="text-muted fw-normal" style="font-size: 0.85em; word-break: break-all;">URL: ${reconstructedUrl}</span>`;
+    } catch (e) {
+        // Fallback just in case the signature format is entirely unexpected
+        return `Search Cache imported successfully!<br>
+                <span class="text-muted fw-normal" style="font-size: 0.85em; word-break: break-all;">Signature: ${signature}</span>`;
+    }
+}
+
+// 1. Copy Cache (Text)
+copyCacheBtn.addEventListener('click', async () => {
+    try {
+        const cache = await getCache('latestSearch');
+        if (!cache) {
+            showCacheStatus('No cache found to copy.', true);
+            return;
+        }
+        const cacheStr = JSON.stringify(cache);
+        cacheTextArea.value = cacheStr;
+        await navigator.clipboard.writeText(cacheStr);
+        showCacheStatus('Cache copied to clipboard!');
+    } catch (e) {
+        showCacheStatus('Error reading cache.', true);
+        console.error(e);
+    }
+});
+
+// 2. Import Cache (Text)
+importTextBtn.addEventListener('click', async () => {
+    try {
+        const val = cacheTextArea.value.trim();
+        if (!val) {
+            showCacheStatus('Please paste JSON data first.', true);
+            return;
+        }
+        const parsedData = JSON.parse(val);
+        
+        // Basic validation to ensure it matches your cache structure
+        if (!parsedData.signature || !Array.isArray(parsedData.results)) {
+            throw new Error('Invalid structure');
+        }
+        
+        await setCache('latestSearch', parsedData);
+        showCacheStatus(formatImportSuccess(parsedData.signature));
+        cacheTextArea.value = ''; // Clean up textarea
+    } catch (e) {
+        showCacheStatus('Invalid JSON or cache format.', true);
+        console.error(e);
+    }
+});
+
+// 3. Export Cache (File)
+exportFileBtn.addEventListener('click', async () => {
+    try {
+        const cache = await getCache('latestSearch');
+        if (!cache) {
+            showCacheStatus('No cache found to export.', true);
+            return;
+        }
+        // Create a downloadable JSON file
+        const blob = new Blob([JSON.stringify(cache, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `lumigest_cache_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showCacheStatus('Cache file downloaded!');
+    } catch (e) {
+        showCacheStatus('Error exporting file.', true);
+        console.error(e);
+    }
+});
+
+// 4. Import Cache (File)
+importFileTrigger.addEventListener('click', () => {
+    importFileInput.click(); // Trigger the hidden file input
+});
+
+importFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        try {
+            const parsedData = JSON.parse(event.target.result);
+            
+            if (!parsedData.signature || !Array.isArray(parsedData.results)) {
+                throw new Error('Invalid structure');
+            }
+            
+            await setCache('latestSearch', parsedData);
+            showCacheStatus(formatImportSuccess(parsedData.signature));
+        } catch (err) {
+            showCacheStatus('Invalid cache file format.', true);
+            console.error(err);
+        }
+        importFileInput.value = ''; // Reset input so the same file can be selected again if needed
+    };
+    reader.readAsText(file);
+});
+
+// 5. Clear Cache
+clearCacheBtn.addEventListener('click', async () => {
+    try {
+        await clearCache(); // Uses your existing IndexedDB clear function
+        
+        // Reset local variables just in case a search was active
+        currentSearchSignature = '';
+        currentCachedResults = [];
+        cacheTextArea.value = '';
+        
+        showCacheStatus('Cache wiped clean successfully!');
+    } catch (e) {
+        showCacheStatus('Error clearing cache.', true);
+        console.error(e);
+    }
 });
 
 function displayResults(videos) {

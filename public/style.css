@@ -102,6 +102,9 @@ body {
     max-width: 400px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     position: relative;
+    max-height: 90vh; /* Prevents it from being taller than 90% of the screen height */
+    overflow-y: auto; /* Adds vertical scrollbar if needed */
+    overflow-x: auto; /* Adds horizontal scrollbar if needed */
 }
 
 .close-btn {
@@ -189,6 +192,21 @@ input:checked + .slider:before {
     background-color: #ee3131;
 }
 
+#clear-cache-btn {
+    background-color: #ff0000;
+    color: white;
+    border-radius: 2mm;
+    border: none;
+}
+
+#clear-cache-btn:hover{
+    background-color: #cc0000;
+}
+
+#clear-cache-btn:active{
+    background-color: #ee3131;
+}
+
 /* Custom Calendar Styling */
 .calendar-day-cell {
     width: 14.28%;
@@ -240,6 +258,41 @@ input:checked + .slider:before {
 #removed-duplicates-status {
     font-style: italic;
     color: #ff0000 !important;
+}
+
+#load-cache-btn {
+    background-color: transparent;
+    color: #198754;              /* Bootstrap success green */
+    border: 1px solid #198754;
+    transition: all 0.2s ease;
+}
+
+#load-cache-btn:hover {
+    background-color: #198754;
+    color: white;
+    border-color: #198754;
+}
+
+#load-cache-btn:focus,
+#load-cache-btn:active {
+    background-color: #198754;
+    color: white;
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+/* Cache Management Styling */
+#cache-text-area {
+    resize: vertical;
+    min-height: 50px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #495057;
+}
+
+#cache-text-area:focus {
+    border-color: #3280f5;
+    box-shadow: 0 0 0 0.25rem rgba(50, 128, 245, 0.25);
 }
 
 @media (max-width: 576px) {
