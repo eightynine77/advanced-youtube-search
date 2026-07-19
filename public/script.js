@@ -233,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 settingsBtn.addEventListener('click', () => {
     loadSettings();
+    updateCachedSearchDisplay();
     modal.classList.remove('hidden');
 });
 
@@ -861,6 +862,46 @@ function showCacheStatus(msg, isError = false) {
     cacheStatusMsg.style.color = isError ? '#ff0000' : '#198754';
 }
 
+// --- NEW: Update Cached Search Link Display ---
+async function updateCachedSearchDisplay() {
+    const cacheDiv = document.getElementById('cached-search-div');
+    
+    try {
+        const cache = await getCache('latestSearch');
+        
+        if (cache && cache.signature) {
+            // Reconstruct the URL based on the signature logic (cloned from formatImportSuccess)
+            const parts = cache.signature.split('|');
+            const searchTerm = parts[0] || 'Unknown';
+            const filterMode = parts[1] || 'default';
+            const afterDate = parts[2] || '';
+            const beforeDate = parts[3] || '';
+            
+            const urlParams = new URLSearchParams();
+            if (searchTerm) urlParams.set('q', searchTerm);
+            
+            let filterParam = 'matchWords';
+            if (filterMode === 'phrase') filterParam = 'wholeWord';
+            if (filterMode === 'exact') filterParam = 'exactTitle';
+            urlParams.set('filter', filterParam);
+            
+            if (afterDate) urlParams.set('afterDate', afterDate);
+            if (beforeDate) urlParams.set('beforeDate', beforeDate);
+            
+            const reconstructedUrl = `${window.location.origin}${window.location.pathname}?${urlParams.toString()}`;
+            
+            // Populate the anchor tag with the link
+            cacheDiv.innerHTML = `<a href="${reconstructedUrl}" id="cached-search" style="word-break: break-all;">${reconstructedUrl}</a>`;
+        } else {
+            // No cache found, display the fallback text
+            cacheDiv.innerHTML = `<a href="" id="cached-search"></a>no cached search yet`;
+        }
+    } catch (e) {
+        console.error("Error updating cached search display:", e);
+        cacheDiv.innerHTML = `<a href="" id="cached-search"></a>error loading cache`;
+    }
+}
+
 // Helper to format the detailed success message
 function formatImportSuccess(signature) {
     try {
@@ -889,11 +930,11 @@ function formatImportSuccess(signature) {
         const reconstructedUrl = `${window.location.origin}${window.location.pathname}?${urlParams.toString()}`;
 
         return `Search Cache imported successfully!<br>
-                <span class="text-muted fw-normal" style="font-size: 0.85em; word-break: break-all;">the search URL: <a href="${reconstructedUrl}">${reconstructedUrl}</a></span>`;
+                <span class="text-muted fw-normal" style="font-size: 13px; word-break: break-all;">the search URL: <a href="${reconstructedUrl}">${reconstructedUrl}</a></span>`;
     } catch (e) {
         // Fallback just in case the signature format is entirely unexpected
         return `Search Cache imported successfully!<br>
-                <span class="text-muted fw-normal" style="font-size: 0.85em; word-break: break-all;">Signature: ${signature}</span>`;
+                <span class="text-muted fw-normal" style="font-size: 13px; word-break: break-all;">Signature: ${signature}</span>`;
     }
 }
 
@@ -932,6 +973,7 @@ importTextBtn.addEventListener('click', async () => {
         
         await setCache('latestSearch', parsedData);
         showCacheStatus(formatImportSuccess(parsedData.signature));
+        updateCachedSearchDisplay();
         cacheTextArea.value = ''; // Clean up textarea
     } catch (e) {
         showCacheStatus('Invalid JSON or cache format.', true);
@@ -985,6 +1027,7 @@ importFileInput.addEventListener('change', (e) => {
             
             await setCache('latestSearch', parsedData);
             showCacheStatus(formatImportSuccess(parsedData.signature));
+            updateCachedSearchDisplay();
         } catch (err) {
             showCacheStatus('Invalid cache file format.', true);
             console.error(err);
@@ -1005,6 +1048,7 @@ clearCacheBtn.addEventListener('click', async () => {
         cacheTextArea.value = '';
         
         showCacheStatus('Cache wiped clean successfully!');
+        updateCachedSearchDisplay();
     } catch (e) {
         showCacheStatus('Error clearing cache.', true);
         console.error(e);
