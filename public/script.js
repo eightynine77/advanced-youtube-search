@@ -923,42 +923,6 @@ async function formatImportSuccess(signature = null, returnMessage = false) {
     }
 }
 
-// Helper to format the detailed success message
-// function formatImportSuccess(signature) {
-//     try {
-//         // The signature is stored as: "query|filter|afterDate|beforeDate"
-//         // Example: "big bill hell|default||2020-01-01"
-//         const parts = signature.split('|');
-//         const searchTerm = parts[0] || 'Unknown';
-//         const filterMode = parts[1] || 'default';
-//         const afterDate = parts[2] || '';
-//         const beforeDate = parts[3] || '';
-        
-//         // Reconstruct the URL for the visual message
-//         const urlParams = new URLSearchParams();
-//         if (searchTerm) urlParams.set('q', searchTerm);
-        
-//         // Map the internal filter mode back to the URL parameter string
-//         let filterParam = 'matchWords';
-//         if (filterMode === 'phrase') filterParam = 'wholeWord';
-//         if (filterMode === 'exact') filterParam = 'exactTitle';
-//         urlParams.set('filter', filterParam);
-        
-//         // Add dates if they exist in the signature
-//         if (afterDate) urlParams.set('afterDate', afterDate);
-//         if (beforeDate) urlParams.set('beforeDate', beforeDate);
-        
-//         const reconstructedUrl = `${window.location.origin}${window.location.pathname}?${urlParams.toString()}`;
-
-//         return `Search Cache imported successfully!<br>
-//                 <span class="text-muted fw-normal" style="font-size: 13px; word-break: break-all;">the search URL: <a href="${reconstructedUrl}">${reconstructedUrl}</a></span>`;
-//     } catch (e) {
-//         // Fallback just in case the signature format is entirely unexpected
-//         return `Search Cache imported successfully!<br>
-//                 <span class="text-muted fw-normal" style="font-size: 13px; word-break: break-all;">Signature: ${signature}</span>`;
-//     }
-// }
-
 // 1. Copy Cache (Text)
 copyCacheBtn.addEventListener('click', async () => {
     try {
