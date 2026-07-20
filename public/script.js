@@ -907,12 +907,12 @@ async function formatImportSuccess(signature = null, returnMessage = false) {
 
             if (returnMessage) {
                 return `Search Cache imported successfully!<br>
-                        <span class="text-muted fw-normal" style="font-size: 13px; word-break: break-all;">the search URL: <a href="${reconstructedUrl}">${reconstructedUrl}</a></span>`;
+                        <span class="text-muted fw-normal" style="font-size: 1rem; word-break: break-all;">the search URL: <a href="${reconstructedUrl}">${reconstructedUrl}</a></span>`;
             }
         } catch (e) {
             if (returnMessage) {
                 return `Search Cache imported successfully!<br>
-                        <span class="text-muted fw-normal" style="font-size: 13px; word-break: break-all;">Signature: ${currentSignature}</span>`;
+                        <span class="text-muted fw-normal" style="font-size: 1rem; word-break: break-all;">Signature: ${currentSignature}</span>`;
             }
         }
     } else {
