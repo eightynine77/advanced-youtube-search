@@ -470,7 +470,40 @@ async function searchLoop(pageToken, pageNum) {
             }
             throw new Error(errorMessage);
         }
+
         const data = await response.json();
+
+        // --- NEW: FETCH VIEWS/DURATION FOR CUSTOM API KEY USERS ---
+        if (activeApiKey && data.items && data.items.length > 0) {
+            const videoIds = data.items.map(item => item.id.videoId).join(',');
+            const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${activeApiKey}`;
+            
+            try {
+                const detailsRes = await fetch(detailsUrl);
+                const detailsData = await detailsRes.json();
+                
+                if (detailsData.items) {
+                    const detailsMap = {};
+                    detailsData.items.forEach(vid => {
+                        detailsMap[vid.id] = {
+                            duration: vid.contentDetails?.duration,
+                            viewCount: vid.statistics?.viewCount
+                        };
+                    });
+
+                    data.items = data.items.map(item => {
+                        if (detailsMap[item.id.videoId]) {
+                            item.contentDetails = { duration: detailsMap[item.id.videoId].duration };
+                            item.statistics = { viewCount: detailsMap[item.id.videoId].viewCount };
+                        }
+                        return item;
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to fetch extra video details:", err);
+            }
+        }
+        // --- END NEW LOGIC ---
 
         const nextPageToken = data.nextPageToken;
         const videos = data.items;
@@ -540,6 +573,26 @@ function formatVideoDate(dateString) {
     const month = date.toLocaleString('default', { month: 'short' }).toLowerCase();
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
+}
+
+function formatViews(views) {
+    if (!views) return '0 views';
+    return parseInt(views).toLocaleString() + ' views';
+}
+
+function parseDuration(duration) {
+    if (!duration) return '0:00';
+    // Extracts Hours, Minutes, and Seconds from YouTube's PT#H#M#S format
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    const hours = parseInt(match[1]) || 0;
+    const minutes = parseInt(match[2]) || 0;
+    const seconds = parseInt(match[3]) || 0;
+    
+    let result = '';
+    if (hours > 0) result += hours + ':';
+    result += (hours > 0 && minutes < 10 ? '0' : '') + minutes + ':';
+    result += (seconds < 10 ? '0' : '') + seconds;
+    return result;
 }
 
 // --- Custom Modal Calendar Functionality ---
@@ -1091,11 +1144,18 @@ function displayResults(videos) {
         
         //date section
         const dateElement = document.createElement('p');
-        dateElement.className = 'card-text small text-muted mb-2';
+        // Changed mb-2 to mb-1 to tighten the spacing slightly
+        dateElement.className = 'card-text small text-muted mb-1'; 
         dateElement.textContent = `upload date: ${formatVideoDate(video.snippet.publishedAt)}`;
 
-        title.className = 'card-title fs-6'; 
-        title.textContent = decodeHTMLEntities(video.snippet.title);
+        const viewsElement = document.createElement('p');
+        viewsElement.className = 'card-text small text-muted mb-1';
+        viewsElement.textContent = `views: ${formatViews(video.statistics?.viewCount)}`;
+
+        const lengthElement = document.createElement('p');
+        lengthElement.className = 'card-text small text-muted mb-3';
+        lengthElement.textContent = `length: ${parseDuration(video.contentDetails?.duration)}`;
+
         const videoLink = document.createElement('a');
         videoLink.href = `https://www.youtube.com/watch?v=${video.id.videoId}`;
         videoLink.target = '_blank';
@@ -1106,6 +1166,8 @@ function displayResults(videos) {
         //append all elements to search result
         cardBody.appendChild(title);
         cardBody.appendChild(dateElement);
+        cardBody.appendChild(viewsElement); // <--- Added Views
+        cardBody.appendChild(lengthElement); // <--- Added Length
         cardBody.appendChild(videoLink);
         card.appendChild(thumbnail);
         card.appendChild(cardBody);
