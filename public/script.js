@@ -1120,6 +1120,8 @@ function displayResults(videos) {
         lengthElement.className = 'card-text small text-muted mb-3';
         lengthElement.textContent = `length: ${parseDuration(video.contentDetails?.duration)}`;
 
+        title.className = 'card-title fs-6'; 
+        title.textContent = decodeHTMLEntities(video.snippet.title);
         const videoLink = document.createElement('a');
         videoLink.href = `https://www.youtube.com/watch?v=${video.id.videoId}`;
         videoLink.target = '_blank';
