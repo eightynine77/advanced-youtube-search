@@ -6,7 +6,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Search query "q" is required.' });
     }
 
-    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=50&key=${API_KEY}&q=${encodeURIComponent(q)}`;
+    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=50&safeSearch=none&key=${API_KEY}&q=${encodeURIComponent(q)}`;
 
     if (pageToken) url += `&pageToken=${pageToken}`;
     if (publishedAfter) url += `&publishedAfter=${publishedAfter}`;

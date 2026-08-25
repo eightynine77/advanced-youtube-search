@@ -448,7 +448,7 @@ async function searchLoop(pageToken, pageNum) {
     let url;
 
     if (activeApiKey) {
-        url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=50&key=${activeApiKey}&q=${encodeURIComponent(apiQuery)}`;
+        url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=50&safeSearch=none&key=${activeApiKey}&q=${encodeURIComponent(apiQuery)}`;
     } else {
         url = `/api/search?q=${encodeURIComponent(apiQuery)}`;
     }
