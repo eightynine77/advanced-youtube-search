@@ -51,22 +51,6 @@ export default async function handler(req, res) {
                     return item;
                 });
             }
-
-            // Your existing exact-word filtering logic
-            if (q) {
-                const searchTerms = q.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0);
-                data.items = data.items.filter(item => {
-                    const title = item.snippet.title || "";
-                    const description = item.snippet.description || "";
-                    const contentToCheck = (title + " " + description).toLowerCase();
-
-                    return searchTerms.every(term => {
-                        const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        const regex = new RegExp(`\\b${escapedTerm}\\b`);
-                        return regex.test(contentToCheck);
-                    });
-                });
-            }
         }
 
         res.status(200).json(data);

@@ -523,19 +523,32 @@ async function searchLoop(pageToken, pageNum) {
             return;
         }
 
-        const normalizedQuery = query.toLowerCase().trim();
+        const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const normalizedQuery = query.trim(); // Removed .toLowerCase()
 
         const exactMatches = videos.filter(video => {
             const decodedTitle = decodeHTMLEntities(video.snippet.title);
-            const title = decodedTitle.toLowerCase().trim();
-            
+            const title = decodedTitle.trim(); // Removed .toLowerCase()
+    
             if (currentFilterMode === 'exact') {
-                return title === normalizedQuery;
+                // Exact Title: title must match query completely, but case-insensitive
+                // ^ means start of string, $ means end of string
+                const exactRegex = new RegExp(`^${escapeRegExp(normalizedQuery)}$`, 'i');
+                return exactRegex.test(title);
             } else if (currentFilterMode === 'phrase') {
-                return title.includes(normalizedQuery);
+                // Match Whole Word (Phrase): exact phrase as whole words anywhere in title
+                const escapedPhrase = escapeRegExp(normalizedQuery);
+                // The 'i' flag here makes it case-insensitive natively
+                const phraseRegex = new RegExp(`\\b${escapedPhrase}\\b`, 'i');
+                return phraseRegex.test(title);
             } else {
-                const queryWords = normalizedQuery.split(/\s+/); 
-                return queryWords.every(word => title.includes(word));
+                // Match Words (Default): every word must exist as an exact whole word in any order
+                const queryWords = normalizedQuery.split(/\s+/).filter(Boolean); 
+                return queryWords.every(word => {
+                    // The 'i' flag handles both upper and lower case letters
+                    const wordRegex = new RegExp(`\\b${escapeRegExp(word)}\\b`, 'i');
+                    return wordRegex.test(title);
+                });
             }
         });
 
