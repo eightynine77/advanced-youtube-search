@@ -1130,8 +1130,21 @@ function displayResults(videos) {
         viewsElement.textContent = `views: ${formatViews(video.statistics?.viewCount)}`;
 
         const lengthElement = document.createElement('p');
-        lengthElement.className = 'card-text small text-muted mb-3';
+        lengthElement.className = 'card-text small text-muted mb-1';
         lengthElement.textContent = `length: ${parseDuration(video.contentDetails?.duration)}`;
+
+        // create the channel container
+        const channelElement = document.createElement('p');
+        channelElement.className = 'card-text small text-muted mb-3';
+        channelElement.textContent = 'channel: ';
+        
+        // create the clickable link
+        const channelLink = document.createElement('a');
+        channelLink.href = `https://www.youtube.com/channel/${video.snippet.channelId}`;
+        channelLink.target = '_blank';
+        channelLink.rel = 'noopener noreferrer';
+        channelLink.className = 'text-danger text-decoration-none'; // matching your site's red theme
+        channelLink.textContent = decodeHTMLEntities(video.snippet.channelTitle);
 
         title.className = 'card-title fs-6'; 
         title.textContent = decodeHTMLEntities(video.snippet.title);
@@ -1141,12 +1154,14 @@ function displayResults(videos) {
         videoLink.rel = 'noopener noreferrer';
         videoLink.className = 'btn btn-outline-danger mt-auto'; 
         videoLink.textContent = 'Watch Video';
+        channelElement.appendChild(channelLink);
 
         //append all elements to search result
         cardBody.appendChild(title);
         cardBody.appendChild(dateElement);
         cardBody.appendChild(viewsElement); // <--- Added Views
-        cardBody.appendChild(lengthElement); // <--- Added Length
+        cardBody.appendChild(lengthElement); // <--- Added video Length
+        cardBody.appendChild(channelElement);
         cardBody.appendChild(videoLink);
         card.appendChild(thumbnail);
         card.appendChild(cardBody);
