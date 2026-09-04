@@ -61,7 +61,6 @@ async function clearCache() {
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
 const stopButton = document.getElementById('stop-button');
-const removeDuplicatesButton = document.getElementById('remove-duplicates-button');
 const resultsContainer = document.getElementById('results-container');
 const statusElement = document.getElementById('search-status');
 const removedDuplicatesText = document.getElementById('removed-duplicates-status');
@@ -106,19 +105,18 @@ filterItems.forEach(item => {
 searchButton.addEventListener('click', startSearch);
 stopButton.addEventListener('click', stopSearch);
 
-removeDuplicatesButton.addEventListener('click', () => {
+function removeDuplicates() {
     // A Set allows us to efficiently store unique values
     const seenIds = new Set();
     
     // Grab all the currently rendered video cards
-    // Targeting the col wrapper created in displayResults()
     const resultItems = resultsContainer.querySelectorAll('.col-12.col-sm-6.col-md-4.col-lg-3');
     
     let removedCount = 0;
 
     resultItems.forEach(item => {
-        // Find the "Watch Video" anchor tag inside the card
-        const videoLink = item.querySelector('a'); 
+        // FIX: Target the specific class of the video link, ignoring the channel link
+        const videoLink = item.querySelector('a.btn-outline-danger'); 
         
         if (videoLink && videoLink.href) {
             // Extract the video ID from the '?v=' URL parameter
@@ -143,7 +141,7 @@ removeDuplicatesButton.addEventListener('click', () => {
         totalMatches -= removedCount; // Keep the internal counter accurate
         removedDuplicatesText.textContent = `Removed ${removedCount} duplicate${removedCount === 1 ? '' : 's'} — ${totalMatches} search result${totalMatches === 1 ? '' : 's'} remaining`;
         
-        // --- NEW: REMOVE DUPLICATES FROM CACHE AS WELL ---
+        // --- REMOVE DUPLICATES FROM CACHE AS WELL ---
         if (currentCachedResults.length > 0) {
             const seenIdsCache = new Set();
             const uniqueCache = [];
@@ -163,9 +161,10 @@ removeDuplicatesButton.addEventListener('click', () => {
             }).catch(e => console.error("Cache update error:", e));
         }        
     } else if (resultsContainer.children.length > 0) {
-        removedDuplicatesText.textContent = ` No duplicates found`;
+        // Optional: you can clear the text or keep this if you want confirmation that no duplicates existed
+        removedDuplicatesText.textContent = ``; 
     }
-});
+}
 
 searchInput.addEventListener('keyup', function(event) {
     if (event.key === 'Enter') {
@@ -384,6 +383,7 @@ async function startSearch() {
 
 function stopSearch() {
     isSearching = false;
+    removeDuplicates();
 
     searchButton.disabled = false;
     searchInput.disabled = false;
@@ -515,6 +515,7 @@ async function searchLoop(pageToken, pageNum) {
             }
 
             isSearching = false;
+            removeDuplicates();
             statusElement.textContent = `Search complete. Found ${totalMatches} match(es).`;
             searchButton.disabled = false;
             searchInput.disabled = false;
@@ -568,6 +569,7 @@ async function searchLoop(pageToken, pageNum) {
             setTimeout(() => searchLoop(nextPageToken, pageNum + 1), 100);
         } else if (!nextPageToken) {
             isSearching = false;
+            removeDuplicates();
             statusElement.textContent = `Search complete: Reached the end of results. Found ${totalMatches} match(es).`;
             searchButton.disabled = false;
             searchInput.disabled = false;
