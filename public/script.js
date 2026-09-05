@@ -183,24 +183,29 @@ document.addEventListener('DOMContentLoaded', () => {
         textarea.focus();
     }
 
-    // --- NEW: Parse URL parameters on load ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const qParam = urlParams.get('q');
+        // --- NEW: Parse URL parameters on load ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const qParam = urlParams.get('q');
+        const searchOperatorParam = urlParams.get('searchOperator'); 
     
     if (qParam) {
         // 1. Fill out the search input
         searchInput.value = qParam;
-
-        // 2. Set the Filter dropdown
-        const filterParam = urlParams.get('filter');
-        let targetDataValue = 'default'; // matchWords
-        if (filterParam === 'wholeWord') targetDataValue = 'phrase';
-        else if (filterParam === 'exactTitle') targetDataValue = 'exact';
+        // 2. Set the Filter dropdown OR ignore it if using search operator
+        if (searchOperatorParam === 'true') {
+            filterDropdownBtn.classList.add('disabled');
+            filterDropdownBtn.textContent = 'Operator Active';
+        } else {
+            const filterParam = urlParams.get('filter');
+            let targetDataValue = 'default'; // matchWords
+            if (filterParam === 'wholeWord') targetDataValue = 'phrase';
+            else if (filterParam === 'exactTitle') targetDataValue = 'exact';
         
-        // Find the dropdown item and click it programmatically to run your existing event listeners
-        const targetDropdownItem = Array.from(filterItems).find(item => item.getAttribute('data-value') === targetDataValue);
-        if (targetDropdownItem) {
-            targetDropdownItem.click(); 
+            // Find the dropdown item and click it programmatically to run your existing event listeners
+            const targetDropdownItem = Array.from(filterItems).find(item => item.getAttribute('data-value') === targetDataValue);
+            if (targetDropdownItem) {
+                targetDropdownItem.click(); 
+            }
         }
 
         // Helper to convert URL format (YYYY-MM-DD) back to Input format (MM-DD-YYYY)
@@ -307,10 +312,17 @@ async function startSearch() {
     const urlParams = new URLSearchParams();
     urlParams.set('q', query);
 
-    let filterParam = 'matchWords';
-    if (currentFilterMode === 'phrase') filterParam = 'wholeWord';
-    if (currentFilterMode === 'exact') filterParam = 'exactTitle';
-    urlParams.set('filter', filterParam);
+    const hasSearchOperator = query.includes('title:');
+
+    // Handle URL params based on whether the operator is used
+    if (hasSearchOperator) {
+        urlParams.set('searchOperator', 'true');
+    } else {
+        let filterParam = 'matchWords';
+        if (currentFilterMode === 'phrase') filterParam = 'wholeWord';
+        if (currentFilterMode === 'exact') filterParam = 'exactTitle';
+        urlParams.set('filter', filterParam);
+    }
 
     const convertToISO = (dateStr) => {
         if (!dateStr || dateStr.includes('M') || dateStr.includes('D') || dateStr.includes('Y')) return null;
@@ -329,7 +341,8 @@ async function startSearch() {
     window.history.pushState({ path: newURL }, '', newURL);
 
     // --- NEW: GENERATE SEARCH SIGNATURE ---
-    const newSignature = `${query}|${currentFilterMode}|${afterISO || ''}|${beforeISO || ''}`;
+    // If the operator is active, save that in the signature instead of the filter mode
+    const newSignature = `${query}|${hasSearchOperator ? 'operator' : currentFilterMode}|${afterISO || ''}|${beforeISO || ''}`;
 
     isSearching = true;
     searchButton.disabled = true;
@@ -409,6 +422,21 @@ async function searchLoop(pageToken, pageNum) {
     const beforeVal = dateBeforeInput.value;
 
     let apiQuery = query; 
+
+    // Strip "title:" prefixes so YouTube API receives clean keywords
+    const hasSearchOperator = query.includes('title:');
+    if (hasSearchOperator) {
+        const operatorRegex = /title:(?:"([^"]+)"|([^\s"]+))/gi;
+        let match;
+        const cleanTerms = [];
+        while ((match = operatorRegex.exec(query)) !== null) {
+            const term = match[1] !== undefined ? `"${match[1]}"` : match[2];
+            if (term) cleanTerms.push(term);
+        }
+        if (cleanTerms.length > 0) {
+            apiQuery = cleanTerms.join(' ');
+        }
+    }
 
     let publishedAfter = null;
     let publishedBefore = null;
@@ -525,28 +553,44 @@ async function searchLoop(pageToken, pageNum) {
         }
 
         const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const normalizedQuery = query.trim(); // Removed .toLowerCase()
+        const normalizedQuery = query.trim(); 
+        const hasSearchOperator = normalizedQuery.includes('title:');
 
         const exactMatches = videos.filter(video => {
             const decodedTitle = decodeHTMLEntities(video.snippet.title);
-            const title = decodedTitle.trim(); // Removed .toLowerCase()
-    
-            if (currentFilterMode === 'exact') {
-                // Exact Title: title must match query completely, but case-insensitive
-                // ^ means start of string, $ means end of string
+            const title = decodedTitle.trim(); 
+
+            if (hasSearchOperator) {
+                // Extract text inside quotes OR single words after "title:"
+                const regex = /title:(?:"([^"]+)"|([^\s"]+))/gi;
+                let match;
+                const requiredTitles = [];
+            
+                while ((match = regex.exec(normalizedQuery)) !== null) {
+                    const extractedTerm = match[1] || match[2];
+                    if (extractedTerm) {
+                        requiredTitles.push(extractedTerm);
+                    }
+                }
+                // Match every required word/phrase as whole words anywhere in the title
+                return requiredTitles.every(req => {
+                    const wordRegex = new RegExp(`\\b${escapeRegExp(req)}\\b`, 'i');
+                    return wordRegex.test(title);
+            });
+
+            } else if (currentFilterMode === 'exact') {
+                // ... (Keep your existing exactTitle logic here)
                 const exactRegex = new RegExp(`^${escapeRegExp(normalizedQuery)}$`, 'i');
                 return exactRegex.test(title);
             } else if (currentFilterMode === 'phrase') {
-                // Match Whole Word (Phrase): exact phrase as whole words anywhere in title
+                // ... (Keep your existing wholeWord logic here)
                 const escapedPhrase = escapeRegExp(normalizedQuery);
-                // The 'i' flag here makes it case-insensitive natively
                 const phraseRegex = new RegExp(`\\b${escapedPhrase}\\b`, 'i');
                 return phraseRegex.test(title);
             } else {
-                // Match Words (Default): every word must exist as an exact whole word in any order
+                // ... (Keep your existing matchWords logic here)
                 const queryWords = normalizedQuery.split(/\s+/).filter(Boolean); 
                 return queryWords.every(word => {
-                    // The 'i' flag handles both upper and lower case letters
                     const wordRegex = new RegExp(`\\b${escapeRegExp(word)}\\b`, 'i');
                     return wordRegex.test(title);
                 });
