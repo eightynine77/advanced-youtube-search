@@ -76,6 +76,9 @@ const closeBtn = document.getElementById('close-modal-btn');
 const apiToggle = document.getElementById('api-toggle');
 const apiKeyInput = document.getElementById('user-api-key');
 const saveBtn = document.getElementById('save-settings-btn');
+const helpModal = document.getElementById('help-modal');
+const helpBtn = document.getElementById('help-btn');
+const closeHelpBtn = document.getElementById('close-help-btn');
 
 function decodeHTMLEntities(text) {
     if (!text) return '';
@@ -254,6 +257,22 @@ modal.addEventListener('click', (event) => {
 
         cacheTextArea.value = '';
         cacheStatusMsg.innerHTML = '';
+    }
+});
+
+// --- Help Modal Logic ---
+helpBtn.addEventListener('click', () => {
+    helpModal.classList.remove('hidden');
+});
+
+closeHelpBtn.addEventListener('click', () => {
+    helpModal.classList.add('hidden');
+});
+
+// Close when clicking outside the box
+helpModal.addEventListener('click', (event) => {
+    if (event.target === helpModal) {
+        helpModal.classList.add('hidden');
     }
 });
 
